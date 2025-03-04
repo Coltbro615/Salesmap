@@ -100,7 +100,7 @@
         const customersRef = db.ref("customers");
 
         window.customers = [];
-        let editingIndex = -1;
+        let editingId = null; // Changed from editingIndex to editingId
         const today = new Date();
         let geocoder;
 
@@ -147,28 +147,13 @@
             if (customersRef) {
                 customersRef.on("value", (snapshot) => {
                     const data = snapshot.val();
-                    window.customers = data ? Object.values(data) : [];
+                    window.customers = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })) : [];
                     console.log("Customers loaded/updated:", window.customers);
                     initMap(document.getElementById("filter").value);
                 }, (error) => {
                     console.error("Error loading customers:", error);
                     alert("Failed to load data: " + error.message);
                 });
-            }
-        }
-
-        function saveCustomers() {
-            if (!customersRef) {
-                console.warn("Firebase not available. Cannot save.");
-                return;
-            }
-            try {
-                customersRef.set(window.customers, (error) => {
-                    if (error) console.error("Error saving customers:", error);
-                    else console.log("Customers saved successfully");
-                });
-            } catch (error) {
-                console.error("Save failed:", error);
             }
         }
 
@@ -201,19 +186,18 @@
                         priority: document.getElementById("priority").value || "high",
                         notes: document.getElementById("notes").value || "",
                         lastVisit: document.getElementById("lastVisit").value || "",
-                        reminders: Array.from(document.getElementById("reminders").selectedOptions).map(option => option.value) || []
+                        reminders: Array.from(document.getElementById("reminders").selectedOptions || []).map(option => option.value)
                     };
                     console.log("Adding customer:", newCustomer);
-                    if (!Array.isArray(window.customers)) window.customers = [];
-                    window.customers.push(newCustomer);
-                    saveCustomers();
+                    customersRef.push(newCustomer); // Use push() for unique ID
                     clearForm();
                 }
             });
         }
 
-        function editCustomer(index) {
-            const customer = window.customers[index];
+        function editCustomer(id) {
+            const customer = window.customers.find(c => c.id === id);
+            if (!customer) return;
             document.getElementById("name").value = customer.name;
             document.getElementById("address").value = customer.address;
             document.getElementById("priority").value = customer.priority;
@@ -225,17 +209,17 @@
                 option.selected = customer.reminders.includes(option.value);
             });
 
-            editingIndex = index;
+            editingId = id;
             document.getElementById("saveEditButton").style.display = "block";
             document.getElementById("addCustomerButton").style.display = "none";
         }
 
         function saveEditedCustomer() {
-            if (editingIndex !== -1) {
+            if (editingId !== null) {
                 const address = document.getElementById("address").value;
                 geocodeAddress(address, (result) => {
                     if (result) {
-                        window.customers[editingIndex] = {
+                        const updatedCustomer = {
                             lat: result.lat,
                             lng: result.lng,
                             address: result.formattedAddress,
@@ -243,12 +227,12 @@
                             priority: document.getElementById("priority").value || "high",
                             notes: document.getElementById("notes").value || "",
                             lastVisit: document.getElementById("lastVisit").value || "",
-                            reminders: Array.from(document.getElementById("reminders").selectedOptions).map(option => option.value) || []
+                            reminders: Array.from(document.getElementById("reminders").selectedOptions || []).map(option => option.value)
                         };
-                        console.log("Edited customer:", window.customers[editingIndex]);
-                        saveCustomers();
+                        console.log("Edited customer:", updatedCustomer);
+                        customersRef.child(editingId).set(updatedCustomer);
                         clearForm();
-                        editingIndex = -1;
+                        editingId = null;
                         document.getElementById("saveEditButton").style.display = "none";
                         document.getElementById("addCustomerButton").style.display = "block";
                     }
@@ -256,10 +240,9 @@
             }
         }
 
-        function deleteCustomer(index) {
+        function deleteCustomer(id) {
             if (confirm("Are you sure you want to delete this customer?")) {
-                window.customers.splice(index, 1);
-                saveCustomers();
+                customersRef.child(id).remove();
             }
         }
 
@@ -273,7 +256,7 @@
         }
 
         function isOverdue(customer) {
-            if (!customer.lastVisit || customer.reminders.length === 0) return false;
+            if (!customer.lastVisit || !customer.reminders || customer.reminders.length === 0) return false;
             const lastVisitDate = new Date(customer.lastVisit);
             if (isNaN(lastVisitDate.getTime())) return false;
             return customer.reminders.some(reminder => {
@@ -291,8 +274,8 @@
 
         function initMap(filter = "all") {
             const map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 7, // Increased zoom level to focus on NC/SC/VA
-                center: { lat: 35.7796, lng: -78.6382 } // Raleigh, NC coordinates
+                zoom: 7,
+                center: { lat: 35.7796, lng: -78.6382 } // Raleigh, NC
             });
 
             const filteredCustomers = window.customers.filter(customer => {
@@ -302,7 +285,7 @@
                 return false;
             });
 
-            filteredCustomers.forEach((customer, index) => {
+            filteredCustomers.forEach((customer) => {
                 let pinColor;
                 if (isOverdue(customer)) {
                     pinColor = "purple";
@@ -330,9 +313,9 @@
                         <p>Priority: ${customer.priority}</p>
                         <p>Notes: ${customer.notes}</p>
                         <p>Last Visit: ${customer.lastVisit}</p>
-                        <p>Reminders: ${customer.reminders.join(", ")}</p>
-                        <button onclick="editCustomer(${index})">Edit</button>
-                        <button onclick="deleteCustomer(${index})">Delete</button>
+                        <p>Reminders: ${Array.isArray(customer.reminders) ? customer.reminders.join(", ") : "None"}</p>
+                        <button onclick="editCustomer('${customer.id}')">Edit</button>
+                        <button onclick="deleteCustomer('${customer.id}')">Delete</button>
                     `
                 });
 
