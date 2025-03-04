@@ -44,8 +44,7 @@
         </div>
         <h2>Add/Edit Customer</h2>
         <input id="name" placeholder="Customer Name" disabled>
-        <input id="lat" placeholder="Latitude" type="number" step="any" disabled>
-        <input id="lng" placeholder="Longitude" type="number" step="any" disabled>
+        <input id="address" placeholder="Customer Address" disabled>
         <select id="priority" disabled>
             <option value="high">High Priority (Green)</option>
             <option value="medium">Medium Priority (Yellow)</option>
@@ -79,7 +78,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
     <script>
-        // Replace with your Firebase config (double-check this!)
         const firebaseConfig = {
             apiKey: "AIzaSyA1aUdvuhzMqJAKGNy0ttDVS-QZNib30ZY",
             authDomain: "sales-map-ac968.firebaseapp.com",
@@ -88,10 +86,8 @@
             storageBucket: "sales-map-ac968.firebasestorage.app",
             messagingSenderId: "758371444111",
             appId: "1:758371444111:web:a5f0f425522e1bf536d7fa"
-
         };
 
-        // Initialize Firebase
         try {
             firebase.initializeApp(firebaseConfig);
             console.log("Firebase initialized successfully");
@@ -103,16 +99,15 @@
         const db = firebase.database();
         const customersRef = db.ref("customers");
 
-        // Global variables
         window.customers = [];
         let editingIndex = -1;
         const today = new Date();
+        let geocoder;
 
-        // Authentication state listener
         firebase.auth().onAuthStateChanged((user) => {
             const authStatus = document.getElementById("auth-status");
             const signOutButton = document.getElementById("signOutButton");
-            const customerInputs = document.querySelectorAll("#name, #lat, #lng, #priority, #notes, #lastVisit, #reminders, #addCustomerButton, #saveEditButton, #filter");
+            const customerInputs = document.querySelectorAll("#name, #address, #priority, #notes, #lastVisit, #reminders, #addCustomerButton, #saveEditButton, #filter");
             if (user) {
                 authStatus.textContent = `Signed in as ${user.email}`;
                 signOutButton.style.display = "block";
@@ -129,7 +124,6 @@
             }
         });
 
-        // Sign in function
         function signIn() {
             const email = document.getElementById("email").value;
             const password = document.getElementById("password").value;
@@ -143,14 +137,12 @@
                 });
         }
 
-        // Sign out function
         function signOut() {
             firebase.auth().signOut()
                 .then(() => console.log("Signed out successfully"))
                 .catch(error => console.error("Sign-out failed:", error));
         }
 
-        // Load customers from Firebase
         function loadCustomers() {
             if (customersRef) {
                 customersRef.on("value", (snapshot) => {
@@ -180,28 +172,50 @@
             }
         }
 
+        function geocodeAddress(address, callback) {
+            if (!geocoder) geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ 'address': address }, (results, status) => {
+                if (status === 'OK' && results[0]) {
+                    const location = results[0].geometry.location;
+                    callback({
+                        lat: location.lat(),
+                        lng: location.lng(),
+                        formattedAddress: results[0].formatted_address
+                    });
+                } else {
+                    alert('Geocode failed: ' + status);
+                    callback(null);
+                }
+            });
+        }
+
         function addCustomer() {
-            const newCustomer = {
-                lat: parseFloat(document.getElementById("lat").value) || 0,
-                lng: parseFloat(document.getElementById("lng").value) || 0,
-                name: document.getElementById("name").value || "Unnamed",
-                priority: document.getElementById("priority").value || "high",
-                notes: document.getElementById("notes").value || "",
-                lastVisit: document.getElementById("lastVisit").value || "",
-                reminders: Array.from(document.getElementById("reminders").selectedOptions).map(option => option.value) || []
-            };
-            console.log("Adding customer:", newCustomer);
-            if (!Array.isArray(window.customers)) window.customers = [];
-            window.customers.push(newCustomer);
-            saveCustomers();
-            clearForm();
+            const address = document.getElementById("address").value;
+            geocodeAddress(address, (result) => {
+                if (result) {
+                    const newCustomer = {
+                        lat: result.lat,
+                        lng: result.lng,
+                        address: result.formattedAddress,
+                        name: document.getElementById("name").value || "Unnamed",
+                        priority: document.getElementById("priority").value || "high",
+                        notes: document.getElementById("notes").value || "",
+                        lastVisit: document.getElementById("lastVisit").value || "",
+                        reminders: Array.from(document.getElementById("reminders").selectedOptions).map(option => option.value) || []
+                    };
+                    console.log("Adding customer:", newCustomer);
+                    if (!Array.isArray(window.customers)) window.customers = [];
+                    window.customers.push(newCustomer);
+                    saveCustomers();
+                    clearForm();
+                }
+            });
         }
 
         function editCustomer(index) {
             const customer = window.customers[index];
             document.getElementById("name").value = customer.name;
-            document.getElementById("lat").value = customer.lat;
-            document.getElementById("lng").value = customer.lng;
+            document.getElementById("address").value = customer.address;
             document.getElementById("priority").value = customer.priority;
             document.getElementById("notes").value = customer.notes;
             document.getElementById("lastVisit").value = customer.lastVisit;
@@ -218,21 +232,27 @@
 
         function saveEditedCustomer() {
             if (editingIndex !== -1) {
-                window.customers[editingIndex] = {
-                    lat: parseFloat(document.getElementById("lat").value) || 0,
-                    lng: parseFloat(document.getElementById("lng").value) || 0,
-                    name: document.getElementById("name").value || "Unnamed",
-                    priority: document.getElementById("priority").value || "high",
-                    notes: document.getElementById("notes").value || "",
-                    lastVisit: document.getElementById("lastVisit").value || "",
-                    reminders: Array.from(document.getElementById("reminders").selectedOptions).map(option => option.value) || []
-                };
-                console.log("Edited customer:", window.customers[editingIndex]);
-                saveCustomers();
-                clearForm();
-                editingIndex = -1;
-                document.getElementById("saveEditButton").style.display = "none";
-                document.getElementById("addCustomerButton").style.display = "block";
+                const address = document.getElementById("address").value;
+                geocodeAddress(address, (result) => {
+                    if (result) {
+                        window.customers[editingIndex] = {
+                            lat: result.lat,
+                            lng: result.lng,
+                            address: result.formattedAddress,
+                            name: document.getElementById("name").value || "Unnamed",
+                            priority: document.getElementById("priority").value || "high",
+                            notes: document.getElementById("notes").value || "",
+                            lastVisit: document.getElementById("lastVisit").value || "",
+                            reminders: Array.from(document.getElementById("reminders").selectedOptions).map(option => option.value) || []
+                        };
+                        console.log("Edited customer:", window.customers[editingIndex]);
+                        saveCustomers();
+                        clearForm();
+                        editingIndex = -1;
+                        document.getElementById("saveEditButton").style.display = "none";
+                        document.getElementById("addCustomerButton").style.display = "block";
+                    }
+                });
             }
         }
 
@@ -245,8 +265,7 @@
 
         function clearForm() {
             document.getElementById("name").value = "";
-            document.getElementById("lat").value = "";
-            document.getElementById("lng").value = "";
+            document.getElementById("address").value = "";
             document.getElementById("priority").value = "high";
             document.getElementById("notes").value = "";
             document.getElementById("lastVisit").value = "";
@@ -272,8 +291,8 @@
 
         function initMap(filter = "all") {
             const map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 4,
-                center: { lat: 39.8283, lng: -98.5795 }
+                zoom: 7, // Increased zoom level to focus on NC/SC/VA
+                center: { lat: 35.7796, lng: -78.6382 } // Raleigh, NC coordinates
             });
 
             const filteredCustomers = window.customers.filter(customer => {
@@ -307,6 +326,7 @@
                 const infoWindow = new google.maps.InfoWindow({
                     content: `
                         <h3>${customer.name}</h3>
+                        <p>Address: ${customer.address}</p>
                         <p>Priority: ${customer.priority}</p>
                         <p>Notes: ${customer.notes}</p>
                         <p>Last Visit: ${customer.lastVisit}</p>
