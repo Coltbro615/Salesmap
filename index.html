@@ -23,15 +23,19 @@
         .legend-item { display: flex; align-items: center; margin: 5px 0; }
         .legend-color { width: 20px; height: 20px; margin-right: 5px; }
         #auth-container { margin-bottom: 10px; }
+        #filter { height: 100px; }
+        #notes-section textarea { height: 100px; }
     </style>
 </head>
 <body>
     <div id="map"></div>
     <div id="legend">
+        <div class="legend-item"><div class="legend-color" style="background-color: blue;"></div> Urgent Priority</div>
         <div class="legend-item"><div class="legend-color" style="background-color: green;"></div> High Priority</div>
         <div class="legend-item"><div class="legend-color" style="background-color: yellow;"></div> Medium Priority</div>
-        <div class="legend-item"><div class="legend-color" style="background-color: blue;"></div> Urgent Priority</div>
         <div class="legend-item"><div class="legend-color" style="background-color: red;"></div> Low Priority</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: orange;"></div> Never Visited</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: gray;"></div> No Visit</div>
         <div class="legend-item"><div class="legend-color" style="background-color: purple;"></div> Overdue</div>
     </div>
     <div id="sidebar">
@@ -46,14 +50,22 @@
         <input id="name" placeholder="Customer Name" disabled>
         <input id="address" placeholder="Customer Address" disabled>
         <select id="priority" disabled>
+            <option value="urgent">Urgent Priority (Blue)</option>
             <option value="high">High Priority (Green)</option>
             <option value="medium">Medium Priority (Yellow)</option>
-            <option value="urgent">Urgent Priority (Blue)</option>
             <option value="low">Low Priority (Red)</option>
+            <option value="never">Never Visited (Orange)</option>
+            <option value="no">No Visit (Gray)</option>
         </select>
-        <textarea id="notes" placeholder="Notes" disabled></textarea>
+        <div id="notes-section">
+            <input id="contactName" placeholder="Contact Name" disabled>
+            <input id="phone" type="tel" placeholder="Phone Number" disabled>
+            <input id="emailContact" type="email" placeholder="Email Address" disabled>
+            <textarea id="notes" placeholder="Additional Notes" disabled></textarea>
+        </div>
         <input id="lastVisit" type="date" disabled>
         <select id="reminders" multiple disabled>
+            <option value="never">Never</option>
             <option value="1 month">1 Month</option>
             <option value="3 months">3 Months</option>
             <option value="6 months">6 Months</option>
@@ -62,14 +74,18 @@
         <button id="addCustomerButton" onclick="addCustomer()" disabled>Add Customer</button>
         <button id="saveEditButton" onclick="saveEditedCustomer()" style="display: none;" disabled>Save Changes</button>
         <h3>Filter by Pin Color</h3>
-        <select id="filter" onchange="applyFilter()" disabled>
+        <select id="filter" multiple onchange="applyFilter()" disabled>
             <option value="all">All</option>
+            <option value="urgent">Urgent (Blue)</option>
             <option value="high">High (Green)</option>
             <option value="medium">Medium (Yellow)</option>
-            <option value="urgent">Urgent (Blue)</option>
             <option value="low">Low (Red)</option>
+            <option value="never">Never Visited (Orange)</option>
+            <option value="no">No Visit (Gray)</option>
             <option value="overdue">Overdue (Purple)</option>
         </select>
+        <h3>Search Customer</h3>
+        <input id="search" placeholder="Search by name" disabled onkeyup="searchCustomers()">
     </div>
 
     <!-- Firebase Compat SDK -->
@@ -100,14 +116,14 @@
         const customersRef = db.ref("customers");
 
         window.customers = [];
-        let editingId = null; // Changed from editingIndex to editingId
+        let editingId = null;
         const today = new Date();
         let geocoder;
 
         firebase.auth().onAuthStateChanged((user) => {
             const authStatus = document.getElementById("auth-status");
             const signOutButton = document.getElementById("signOutButton");
-            const customerInputs = document.querySelectorAll("#name, #address, #priority, #notes, #lastVisit, #reminders, #addCustomerButton, #saveEditButton, #filter");
+            const customerInputs = document.querySelectorAll("#name, #address, #priority, #contactName, #phone, #emailContact, #notes, #lastVisit, #reminders, #addCustomerButton, #saveEditButton, #filter, #search");
             if (user) {
                 authStatus.textContent = `Signed in as ${user.email}`;
                 signOutButton.style.display = "block";
@@ -149,7 +165,7 @@
                     const data = snapshot.val();
                     window.customers = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })) : [];
                     console.log("Customers loaded/updated:", window.customers);
-                    initMap(document.getElementById("filter").value);
+                    initMap(getSelectedFilters());
                 }, (error) => {
                     console.error("Error loading customers:", error);
                     alert("Failed to load data: " + error.message);
@@ -183,13 +199,16 @@
                         lng: result.lng,
                         address: result.formattedAddress,
                         name: document.getElementById("name").value || "Unnamed",
-                        priority: document.getElementById("priority").value || "high",
+                        priority: document.getElementById("priority").value || "urgent",
+                        contactName: document.getElementById("contactName").value || "",
+                        phone: document.getElementById("phone").value || "",
+                        emailContact: document.getElementById("emailContact").value || "",
                         notes: document.getElementById("notes").value || "",
                         lastVisit: document.getElementById("lastVisit").value || "",
                         reminders: Array.from(document.getElementById("reminders").selectedOptions || []).map(option => option.value)
                     };
                     console.log("Adding customer:", newCustomer);
-                    customersRef.push(newCustomer); // Use push() for unique ID
+                    customersRef.push(newCustomer);
                     clearForm();
                 }
             });
@@ -201,7 +220,10 @@
             document.getElementById("name").value = customer.name;
             document.getElementById("address").value = customer.address;
             document.getElementById("priority").value = customer.priority;
-            document.getElementById("notes").value = customer.notes;
+            document.getElementById("contactName").value = customer.contactName || "";
+            document.getElementById("phone").value = customer.phone || "";
+            document.getElementById("emailContact").value = customer.emailContact || "";
+            document.getElementById("notes").value = customer.notes || "";
             document.getElementById("lastVisit").value = customer.lastVisit;
 
             const remindersSelect = document.getElementById("reminders");
@@ -224,7 +246,10 @@
                             lng: result.lng,
                             address: result.formattedAddress,
                             name: document.getElementById("name").value || "Unnamed",
-                            priority: document.getElementById("priority").value || "high",
+                            priority: document.getElementById("priority").value || "urgent",
+                            contactName: document.getElementById("contactName").value || "",
+                            phone: document.getElementById("phone").value || "",
+                            emailContact: document.getElementById("emailContact").value || "",
                             notes: document.getElementById("notes").value || "",
                             lastVisit: document.getElementById("lastVisit").value || "",
                             reminders: Array.from(document.getElementById("reminders").selectedOptions || []).map(option => option.value)
@@ -249,14 +274,18 @@
         function clearForm() {
             document.getElementById("name").value = "";
             document.getElementById("address").value = "";
-            document.getElementById("priority").value = "high";
+            document.getElementById("priority").value = "urgent";
+            document.getElementById("contactName").value = "";
+            document.getElementById("phone").value = "";
+            document.getElementById("emailContact").value = "";
             document.getElementById("notes").value = "";
             document.getElementById("lastVisit").value = "";
             document.getElementById("reminders").selectedIndex = -1;
+            document.getElementById("search").value = "";
         }
 
         function isOverdue(customer) {
-            if (!customer.lastVisit || !customer.reminders || customer.reminders.length === 0) return false;
+            if (!customer.lastVisit || !customer.reminders || customer.reminders.length === 0 || customer.reminders.includes("never")) return false;
             const lastVisitDate = new Date(customer.lastVisit);
             if (isNaN(lastVisitDate.getTime())) return false;
             return customer.reminders.some(reminder => {
@@ -267,22 +296,37 @@
             });
         }
 
-        function applyFilter() {
-            const filterValue = document.getElementById("filter").value;
-            initMap(filterValue);
+        function getSelectedFilters() {
+            const select = document.getElementById("filter");
+            return Array.from(select.selectedOptions).map(option => option.value);
         }
 
-        function initMap(filter = "all") {
+        function applyFilter() {
+            const filters = getSelectedFilters();
+            initMap(filters);
+        }
+
+        function searchCustomers() {
+            const searchValue = document.getElementById("search").value.toLowerCase();
+            initMap(getSelectedFilters(), searchValue);
+        }
+
+        function initMap(filters = ["all"], search = "") {
             const map = new google.maps.Map(document.getElementById("map"), {
                 zoom: 7,
                 center: { lat: 35.7796, lng: -78.6382 } // Raleigh, NC
             });
 
             const filteredCustomers = window.customers.filter(customer => {
-                if (filter === "all") return true;
-                if (filter === "overdue" && isOverdue(customer)) return true;
-                if (filter === customer.priority && !isOverdue(customer)) return true;
-                return false;
+                const isOverdueCustomer = isOverdue(customer);
+                const customerPriority = isOverdueCustomer ? "overdue" : customer.priority;
+                
+                const matchesFilter = filters.includes("all") || 
+                    (filters.includes("overdue") && isOverdueCustomer) ||
+                    (filters.includes(customer.priority) && !isOverdueCustomer);
+                    
+                const matchesSearch = !search || customer.name.toLowerCase().includes(search);
+                return matchesFilter && matchesSearch;
             });
 
             filteredCustomers.forEach((customer) => {
@@ -291,32 +335,37 @@
                     pinColor = "purple";
                 } else {
                     switch (customer.priority) {
+                        case "urgent": pinColor = "blue"; break;
                         case "high": pinColor = "green"; break;
                         case "medium": pinColor = "yellow"; break;
-                        case "urgent": pinColor = "blue"; break;
                         case "low": pinColor = "red"; break;
+                        case "never": pinColor = "orange"; break;
+                        case "no": pinColor = "gray"; break;
                         default: pinColor = "gray";
                     }
                 }
-
-                const marker = new google.maps.Marker({
-                    position: { lat: customer.lat, lng: customer.lng },
-                    map: map,
-                    title: customer.name,
-                    icon: { url: `http://maps.google.com/mapfiles/ms/icons/${pinColor}-dot.png` }
-                });
 
                 const infoWindow = new google.maps.InfoWindow({
                     content: `
                         <h3>${customer.name}</h3>
                         <p>Address: ${customer.address}</p>
                         <p>Priority: ${customer.priority}</p>
-                        <p>Notes: ${customer.notes}</p>
-                        <p>Last Visit: ${customer.lastVisit}</p>
+                        <p>Contact Name: ${customer.contactName || 'N/A'}</p>
+                        <p>Phone: ${customer.phone || 'N/A'}</p>
+                        <p>Email: ${customer.emailContact || 'N/A'}</p>
+                        <p>Notes: ${customer.notes || 'N/A'}</p>
+                        <p>Last Visit: ${customer.lastVisit || 'N/A'}</p>
                         <p>Reminders: ${Array.isArray(customer.reminders) ? customer.reminders.join(", ") : "None"}</p>
                         <button onclick="editCustomer('${customer.id}')">Edit</button>
                         <button onclick="deleteCustomer('${customer.id}')">Delete</button>
                     `
+                });
+
+                const marker = new google.maps.Marker({
+                    position: { lat: customer.lat, lng: customer.lng },
+                    map: map,
+                    title: customer.name,
+                    icon: { url: `http://maps.google.com/mapfiles/ms/icons/${pinColor}-dot.png` }
                 });
 
                 marker.addListener("click", () => {
