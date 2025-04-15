@@ -6,7 +6,7 @@
     <style>
         body { margin: 0; font-family: Arial, sans-serif; display: flex; }
         #map { height: 100vh; width: 70%; position: relative; }
-        #sidebar { width: 30%; padding: 10px; background: #f0f0f0; }
+        #sidebar { width: 30%; padding: 10px; background: #f0f0f0; overflow-y: auto; }
         input, textarea, select { width: 100%; margin: 5px 0; }
         button { margin: 5px 0; }
         #legend { 
@@ -25,6 +25,10 @@
         #auth-container { margin-bottom: 10px; }
         #filter { height: 100px; }
         #notes-section textarea { height: 100px; }
+        #customer-list { max-height: 200px; overflow-y: auto; margin-top: 10px; }
+        #customer-list ul { list-style: none; padding: 0; margin: 0; }
+        #customer-list li { padding: 5px; cursor: pointer; }
+        #customer-list li:hover { background: #ddd; }
     </style>
 </head>
 <body>
@@ -86,6 +90,10 @@
         </select>
         <h3>Search Customer</h3>
         <input id="search" placeholder="Search by name" disabled onkeyup="searchCustomers()">
+        <h3>Customer List</h3>
+        <div id="customer-list">
+            <ul id="customer-list-ul"></ul>
+        </div>
     </div>
 
     <!-- Firebase Compat SDK -->
@@ -119,6 +127,7 @@
         let editingId = null;
         const today = new Date();
         let geocoder;
+        let currentInfoWindow = null; // Track the open info window
 
         firebase.auth().onAuthStateChanged((user) => {
             const authStatus = document.getElementById("auth-status");
@@ -330,6 +339,27 @@
                 return matchesFilter && matchesSearch;
             });
 
+            // Update customer list
+            const customerListUl = document.getElementById("customer-list-ul");
+            customerListUl.innerHTML = "";
+            filteredCustomers.forEach(customer => {
+                const li = document.createElement("li");
+                li.textContent = customer.name;
+                li.onclick = () => {
+                    map.setCenter({ lat: customer.lat, lng: customer.lng });
+                    map.setZoom(15);
+                    const marker = markers.find(m => m.customerId === customer.id);
+                    if (marker) {
+                        if (currentInfoWindow) currentInfoWindow.close();
+                        marker.infoWindow.open(map, marker);
+                        currentInfoWindow = marker.infoWindow;
+                    }
+                };
+                customerListUl.appendChild(li);
+            });
+
+            // Create markers
+            const markers = [];
             filteredCustomers.forEach((customer) => {
                 let pinColor;
                 if (isOverdue(customer)) {
@@ -366,12 +396,18 @@
                     position: { lat: customer.lat, lng: customer.lng },
                     map: map,
                     title: customer.name,
-                    icon: { url: `http://maps.google.com/mapfiles/ms/icons/${pinColor}-dot.png` }
+                    icon: { url: `http://maps.google.com/mapfiles/ms/icons/${pinColor}-dot.png` },
+                    customerId: customer.id // Store customer ID for list interaction
                 });
 
+                marker.infoWindow = infoWindow; // Store infoWindow for list interaction
                 marker.addListener("click", () => {
+                    if (currentInfoWindow) currentInfoWindow.close();
                     infoWindow.open(map, marker);
+                    currentInfoWindow = infoWindow;
                 });
+
+                markers.push(marker);
             });
         }
     </script>
