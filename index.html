@@ -30,11 +30,11 @@
 <body>
     <div id="map"></div>
     <div id="legend">
-        <div class="legend-item"><div class="legend-color" style="background-color: blue;"></div> Urgent Priority</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: blue;"></div> Hotlist</div>
         <div class="legend-item"><div class="legend-color" style="background-color: green;"></div> High Priority</div>
         <div class="legend-item"><div class="legend-color" style="background-color: yellow;"></div> Medium Priority</div>
         <div class="legend-item"><div class="legend-color" style="background-color: red;"></div> Low Priority</div>
-        <div class="legend-item"><div class="legend-color" style="background-color: orange;"></div> Never Visited</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: orange;"></div> New Visit</div>
         <div class="legend-item"><div class="legend-color" style="background-color: gray;"></div> No Visit</div>
         <div class="legend-item"><div class="legend-color" style="background-color: purple;"></div> Overdue</div>
     </div>
@@ -50,11 +50,11 @@
         <input id="name" placeholder="Customer Name" disabled>
         <input id="address" placeholder="Customer Address" disabled>
         <select id="priority" disabled>
-            <option value="urgent">Urgent Priority (Blue)</option>
+            <option value="urgent">Hotlist (Blue)</option>
             <option value="high">High Priority (Green)</option>
             <option value="medium">Medium Priority (Yellow)</option>
             <option value="low">Low Priority (Red)</option>
-            <option value="never">Never Visited (Orange)</option>
+            <option value="never">New Visit (Orange)</option>
             <option value="no">No Visit (Gray)</option>
         </select>
         <div id="notes-section">
@@ -67,20 +67,20 @@
         <select id="reminders" multiple disabled>
             <option value="never">Never</option>
             <option value="1 month">1 Month</option>
+            <option value="2 months">2 Months</option>
             <option value="3 months">3 Months</option>
-            <option value="6 months">6 Months</option>
-            <option value="12 months">12 Months</option>
+            <option value="4 months">4 Months</option>
         </select>
         <button id="addCustomerButton" onclick="addCustomer()" disabled>Add Customer</button>
         <button id="saveEditButton" onclick="saveEditedCustomer()" style="display: none;" disabled>Save Changes</button>
         <h3>Filter by Pin Color</h3>
         <select id="filter" multiple onchange="applyFilter()" disabled>
             <option value="all">All</option>
-            <option value="urgent">Urgent (Blue)</option>
+            <option value="urgent">Hotlist (Blue)</option>
             <option value="high">High (Green)</option>
             <option value="medium">Medium (Yellow)</option>
             <option value="low">Low (Red)</option>
-            <option value="never">Never Visited (Orange)</option>
+            <option value="never">New Visit (Orange)</option>
             <option value="no">No Visit (Gray)</option>
             <option value="overdue">Overdue (Purple)</option>
         </select>
@@ -289,6 +289,7 @@
             const lastVisitDate = new Date(customer.lastVisit);
             if (isNaN(lastVisitDate.getTime())) return false;
             return customer.reminders.some(reminder => {
+                if (reminder === "never") return false;
                 const months = parseInt(reminder.split(" ")[0]);
                 const reminderDate = new Date(lastVisitDate);
                 reminderDate.setMonth(lastVisitDate.getMonth() + months);
