@@ -29,6 +29,13 @@
         #customer-list ul { list-style: none; padding: 0; margin: 0; }
         #customer-list li { padding: 5px; cursor: pointer; }
         #customer-list li:hover { background: #ddd; }
+        .priority-hotlist { color: blue; }
+        .priority-high { color: green; }
+        .priority-medium { color: #d4a017; } /* Darker yellow for readability */
+        .priority-low { color: red; }
+        .priority-never { color: orange; }
+        .priority-no { color: gray; }
+        .priority-overdue { color: purple; }
     </style>
 </head>
 <body>
@@ -127,7 +134,9 @@
         let editingId = null;
         const today = new Date();
         let geocoder;
-        let currentInfoWindow = null; // Track the open info window
+        let currentInfoWindow = null;
+        let map = null;
+        let markers = [];
 
         firebase.auth().onAuthStateChanged((user) => {
             const authStatus = document.getElementById("auth-status");
@@ -322,19 +331,23 @@
         }
 
         function initMap(filters = ["all"], search = "") {
-            const map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 7,
-                center: { lat: 35.7796, lng: -78.6382 } // Raleigh, NC
-            });
+            if (!map) {
+                map = new google.maps.Map(document.getElementById("map"), {
+                    zoom: 7,
+                    center: { lat: 35.7796, lng: -78.6382 } // Raleigh, NC
+                });
+            }
+
+            // Clear existing markers
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
 
             const filteredCustomers = window.customers.filter(customer => {
                 const isOverdueCustomer = isOverdue(customer);
                 const customerPriority = isOverdueCustomer ? "overdue" : customer.priority;
-                
                 const matchesFilter = filters.includes("all") || 
                     (filters.includes("overdue") && isOverdueCustomer) ||
                     (filters.includes(customer.priority) && !isOverdueCustomer);
-                    
                 const matchesSearch = !search || customer.name.toLowerCase().includes(search);
                 return matchesFilter && matchesSearch;
             });
@@ -342,9 +355,10 @@
             // Update customer list
             const customerListUl = document.getElementById("customer-list-ul");
             customerListUl.innerHTML = "";
-            filteredCustomers.forEach(customer => {
+            filteredCustomers.sort((a, b) => a.name.localeCompare(b.name)).forEach(customer => {
                 const li = document.createElement("li");
                 li.textContent = customer.name;
+                li.className = `priority-${isOverdue(customer) ? "overdue" : customer.priority}`;
                 li.onclick = () => {
                     map.setCenter({ lat: customer.lat, lng: customer.lng });
                     map.setZoom(15);
@@ -359,7 +373,6 @@
             });
 
             // Create markers
-            const markers = [];
             filteredCustomers.forEach((customer) => {
                 let pinColor;
                 if (isOverdue(customer)) {
@@ -397,10 +410,10 @@
                     map: map,
                     title: customer.name,
                     icon: { url: `http://maps.google.com/mapfiles/ms/icons/${pinColor}-dot.png` },
-                    customerId: customer.id // Store customer ID for list interaction
+                    customerId: customer.id
                 });
 
-                marker.infoWindow = infoWindow; // Store infoWindow for list interaction
+                marker.infoWindow = infoWindow;
                 marker.addListener("click", () => {
                     if (currentInfoWindow) currentInfoWindow.close();
                     infoWindow.open(map, marker);
