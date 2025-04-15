@@ -4,9 +4,15 @@
     <meta charset="UTF-8">
     <title>Sales Map</title>
     <style>
-        body { margin: 0; font-family: Arial, sans-serif; display: flex; }
-        #map { height: 100vh; width: 70%; position: relative; }
+        body { margin: 0; font-family: Arial, sans-serif; display: flex; flex-direction: column; }
+        #map-container { display: flex; flex: 1; min-height: 0; }
+        #map { height: 70vh; width: 70%; position: relative; }
         #sidebar { width: 30%; padding: 10px; background: #f0f0f0; overflow-y: auto; }
+        #customer-list-container { width: 100%; background: #f0f0f0; padding: 10px; }
+        #customer-list { max-height: 25vh; overflow-y: auto; }
+        #customer-list ul { list-style: none; padding: 0; margin: 0; }
+        #customer-list li { padding: 5px; cursor: pointer; }
+        #customer-list li:hover { background: #ddd; }
         input, textarea, select { width: 100%; margin: 5px 0; }
         button { margin: 5px 0; }
         #legend { 
@@ -25,13 +31,9 @@
         #auth-container { margin-bottom: 10px; }
         #filter { height: 100px; }
         #notes-section textarea { height: 100px; }
-        #customer-list { max-height: 200px; overflow-y: auto; margin-top: 10px; }
-        #customer-list ul { list-style: none; padding: 0; margin: 0; }
-        #customer-list li { padding: 5px; cursor: pointer; }
-        #customer-list li:hover { background: #ddd; }
         .priority-hotlist { color: blue; }
         .priority-high { color: green; }
-        .priority-medium { color: #d4a017; } /* Darker yellow for readability */
+        .priority-medium { color: #d4a017; }
         .priority-low { color: red; }
         .priority-never { color: orange; }
         .priority-no { color: gray; }
@@ -39,64 +41,59 @@
     </style>
 </head>
 <body>
-    <div id="map"></div>
-    <div id="legend">
-        <div class="legend-item"><div class="legend-color" style="background-color: blue;"></div> Hotlist</div>
-        <div class="legend-item"><div class="legend-color" style="background-color: green;"></div> High Priority</div>
-        <div class="legend-item"><div class="legend-color" style="background-color: yellow;"></div> Medium Priority</div>
-        <div class="legend-item"><div class="legend-color" style="background-color: red;"></div> Low Priority</div>
-        <div class="legend-item"><div class="legend-color" style="background-color: orange;"></div> New Visit</div>
-        <div class="legend-item"><div class="legend-color" style="background-color: gray;"></div> No Visit</div>
-        <div class="legend-item"><div class="legend-color" style="background-color: purple;"></div> Overdue</div>
+    <div id="map-container">
+        <div id="map"></div>
+        <div id="sidebar">
+            <div id="auth-container">
+                <input id="email" type="email" placeholder="Email">
+                <input id="password" type="password" placeholder="Password">
+                <button onclick="signIn()">Sign In</button>
+                <button onclick="signOut()" id="signOutButton" style="display: none;">Sign Out</button>
+                <p id="auth-status">Not signed in</p>
+            </div>
+            <h2>Add/Edit Customer</h2>
+            <input id="name" placeholder="Customer Name" disabled>
+            <input id="address" placeholder="Customer Address" disabled>
+            <select id="priority" disabled>
+                <option value="urgent">Hotlist (Blue)</option>
+                <option value="high">High Priority (Green)</option>
+                <option value="medium">Medium Priority (Yellow)</option>
+                <option value="low">Low Priority (Red)</option>
+                <option value="never">New Visit (Orange)</option>
+                <option value="no">No Visit (Gray)</option>
+            </select>
+            <div id="notes-section">
+                <input id="contactName" placeholder="Contact Name" disabled>
+                <input id="phone" type="tel" placeholder="Phone Number" disabled>
+                <input id="emailContact" type="email" placeholder="Email Address" disabled>
+                <textarea id="notes" placeholder="Additional Notes" disabled></textarea>
+            </div>
+            <input id="lastVisit" type="date" disabled>
+            <select id="reminders" multiple disabled>
+                <option value="never">Never</option>
+                <option value="1 month">1 Month</option>
+                <option value="2 months">2 Months</option>
+                <option value="3 months">3 Months</option>
+                <option value="4 months">4 Months</option>
+            </select>
+            <button id="addCustomerButton" onclick="addCustomer()" disabled>Add Customer</button>
+            <button id="saveEditButton" onclick="saveEditedCustomer()" style="display: none;" disabled>Save Changes</button>
+            <h3>Filter by Pin Color</h3>
+            <select id="filter" multiple onchange="applyFilter()" disabled>
+                <option value="all">All</option>
+                <option value="urgent">Hotlist (Blue)</option>
+                <option value="high">High (Green)</option>
+                <option value="medium">Medium (Yellow)</option>
+                <option value="low">Low (Red)</option>
+                <option value="never">New Visit (Orange)</option>
+                <option value="no">No Visit (Gray)</option>
+                <option value="overdue">Overdue (Purple)</option>
+            </select>
+            <h3>Search Customer</h3>
+            <input id="search" placeholder="Search by name" disabled onkeyup="searchCustomers()">
+        </div>
     </div>
-    <div id="sidebar">
-        <div id="auth-container">
-            <input id="email" type="email" placeholder="Email">
-            <input id="password" type="password" placeholder="Password">
-            <button onclick="signIn()">Sign In</button>
-            <button onclick="signOut()" id="signOutButton" style="display: none;">Sign Out</button>
-            <p id="auth-status">Not signed in</p>
-        </div>
-        <h2>Add/Edit Customer</h2>
-        <input id="name" placeholder="Customer Name" disabled>
-        <input id="address" placeholder="Customer Address" disabled>
-        <select id="priority" disabled>
-            <option value="urgent">Hotlist (Blue)</option>
-            <option value="high">High Priority (Green)</option>
-            <option value="medium">Medium Priority (Yellow)</option>
-            <option value="low">Low Priority (Red)</option>
-            <option value="never">New Visit (Orange)</option>
-            <option value="no">No Visit (Gray)</option>
-        </select>
-        <div id="notes-section">
-            <input id="contactName" placeholder="Contact Name" disabled>
-            <input id="phone" type="tel" placeholder="Phone Number" disabled>
-            <input id="emailContact" type="email" placeholder="Email Address" disabled>
-            <textarea id="notes" placeholder="Additional Notes" disabled></textarea>
-        </div>
-        <input id="lastVisit" type="date" disabled>
-        <select id="reminders" multiple disabled>
-            <option value="never">Never</option>
-            <option value="1 month">1 Month</option>
-            <option value="2 months">2 Months</option>
-            <option value="3 months">3 Months</option>
-            <option value="4 months">4 Months</option>
-        </select>
-        <button id="addCustomerButton" onclick="addCustomer()" disabled>Add Customer</button>
-        <button id="saveEditButton" onclick="saveEditedCustomer()" style="display: none;" disabled>Save Changes</button>
-        <h3>Filter by Pin Color</h3>
-        <select id="filter" multiple onchange="applyFilter()" disabled>
-            <option value="all">All</option>
-            <option value="urgent">Hotlist (Blue)</option>
-            <option value="high">High (Green)</option>
-            <option value="medium">Medium (Yellow)</option>
-            <option value="low">Low (Red)</option>
-            <option value="never">New Visit (Orange)</option>
-            <option value="no">No Visit (Gray)</option>
-            <option value="overdue">Overdue (Purple)</option>
-        </select>
-        <h3>Search Customer</h3>
-        <input id="search" placeholder="Search by name" disabled onkeyup="searchCustomers()">
+    <div id="customer-list-container">
         <h3>Customer List</h3>
         <div id="customer-list">
             <ul id="customer-list-ul"></ul>
@@ -334,11 +331,10 @@
             if (!map) {
                 map = new google.maps.Map(document.getElementById("map"), {
                     zoom: 7,
-                    center: { lat: 35.7796, lng: -78.6382 } // Raleigh, NC
+                    center: { lat: 35.7796, lng: -78.6382 }
                 });
             }
 
-            // Clear existing markers
             markers.forEach(marker => marker.setMap(null));
             markers = [];
 
@@ -352,7 +348,6 @@
                 return matchesFilter && matchesSearch;
             });
 
-            // Update customer list
             const customerListUl = document.getElementById("customer-list-ul");
             customerListUl.innerHTML = "";
             filteredCustomers.sort((a, b) => a.name.localeCompare(b.name)).forEach(customer => {
@@ -372,7 +367,6 @@
                 customerListUl.appendChild(li);
             });
 
-            // Create markers
             filteredCustomers.forEach((customer) => {
                 let pinColor;
                 if (isOverdue(customer)) {
