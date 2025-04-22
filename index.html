@@ -24,7 +24,7 @@
         button { margin: 5px 0; }
         #pin-legend { 
             position: absolute; 
-            bottom: 160px; 
+            bottom: 50px; 
             left: 20px; 
             background: white; 
             padding: 10px; 
@@ -44,7 +44,7 @@
         .priority-low { color: red; }
         .priority-never { color: orange; }
         .priority-no { color: gray; }
-        .priority-overdue { color: black; }
+        .priority-overdue { color: pink; }
     </style>
 </head>
 <body>
@@ -94,7 +94,7 @@
                 <option value="low">Low (Red)</option>
                 <option value="never">New Visit (Orange)</option>
                 <option value="no">No Visit (Gray)</option>
-                <option value="overdue">Overdue (Black)</option>
+                <option value="overdue">Overdue (Pink)</option>
             </select>
             <h3>Search Customer</h3>
             <input id="search" placeholder="Search by name" disabled onkeyup="searchCustomers()">
@@ -114,7 +114,7 @@
         <div class="legend-item"><div class="legend-color" style="background-color: red;"></div>Low Priority</div>
         <div class="legend-item"><div class="legend-color" style="background-color: orange;"></div>New Visit</div>
         <div class="legend-item"><div class="legend-color" style="background-color: gray;"></div>No Visit</div>
-        <div class="legend-item"><div class="legend-color" style="background-color: black;"></div>Overdue</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: pink;"></div>Overdue</div>
     </div>
 
     <!-- Firebase Compat SDK -->
@@ -418,7 +418,8 @@
 
                 let pinColor;
                 if (isOverdue(customer)) {
-                    pinColor = "black";
+                    pinColor = "pink";
+                    console.log("Using pink icon for overdue customer:", customer.name);
                 } else {
                     switch (customer.priority) {
                         case "urgent": pinColor = "blue"; break;
