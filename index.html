@@ -26,6 +26,17 @@
             z-index: 1000; 
             box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
         }
+        #pin-legend { 
+            position: absolute; 
+            bottom: 20px; 
+            right: 20px; 
+            background: white; 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            font-size: 14px; 
+            z-index: 1000; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+        }
         .legend-item { display: flex; align-items: center; margin: 5px 0; }
         .legend-color { width: 20px; height: 20px; margin-right: 5px; }
         #auth-container { margin-bottom: 10px; }
@@ -78,7 +89,7 @@
             </select>
             <button id="addCustomerButton" onclick="addCustomer()" disabled>Add Customer</button>
             <button id="saveEditButton" onclick="saveEditedCustomer()" style="display: none;" disabled>Save Changes</button>
-            <h3>Filter by Pin Color</h3>
+            <h3>Filter by Priority</h3>
             <select id="filter" multiple onchange="applyFilter()" disabled>
                 <option value="all">All</option>
                 <option value="urgent">Hotlist (Blue)</option>
@@ -98,6 +109,16 @@
         <div id="customer-list">
             <ul id="customer-list-ul"></ul>
         </div>
+    </div>
+    <div id="pin-legend">
+        <h4>Pin Color Legend</h4>
+        <div class="legend-item"><div class="legend-color" style="background-color: blue;"></div>Hotlist</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: green;"></div>High Priority</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: yellow;"></div>Medium Priority</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: red;"></div>Low Priority</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: orange;"></div>New Visit</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: gray;"></div>No Visit</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: purple;"></div>Overdue</div>
     </div>
 
     <!-- Firebase Compat SDK -->
@@ -340,10 +361,9 @@
 
             const filteredCustomers = window.customers.filter(customer => {
                 const isOverdueCustomer = isOverdue(customer);
-                const customerPriority = isOverdueCustomer ? "overdue" : customer.priority;
                 const matchesFilter = filters.includes("all") || 
-                    (filters.includes("overdue") && isOverdueCustomer) ||
-                    (filters.includes(customer.priority) && !isOverdueCustomer);
+                    filters.includes(customer.priority) ||
+                    (filters.includes("overdue") && isOverdueCustomer);
                 const matchesSearch = !search || customer.name.toLowerCase().includes(search);
                 return matchesFilter && matchesSearch;
             });
