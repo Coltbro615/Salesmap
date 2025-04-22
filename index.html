@@ -6,7 +6,14 @@
     <style>
         body { margin: 0; font-family: Arial, sans-serif; height: auto; }
         #main-container { display: flex; }
-        #map { height: 100vh; width: 70%; position: relative; }
+        #map { 
+            height: 100vh; 
+            min-height: 100vh; 
+            width: 70%; 
+            min-width: 70%; 
+            position: relative; 
+            display: block; 
+        }
         #sidebar { height: 100vh; width: 30%; padding: 10px; background: #f0f0f0; overflow-y: auto; }
         #customer-list-container { width: 100%; background: #f0f0f0; padding: 10px; }
         #customer-list { height: 400px; overflow-y: auto; }
@@ -28,17 +35,17 @@
         }
         #pin-legend { 
             position: absolute; 
-            bottom: 120px; 
+            bottom: 160px; 
             left: 20px; 
             background: white; 
-            padding: 8px; 
+            padding: 10px; 
             border: 1px solid #ccc; 
-            font-size: 12px; 
+            font-size: 14px; 
             z-index: 1001; 
             box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
         }
-        .legend-item { display: flex; align-items: center; margin: 3px 0; }
-        .legend-color { width: 16px; height: 16px; margin-right: 5px; }
+        .legend-item { display: flex; align-items: center; margin: 5px 0; }
+        .legend-color { width: 20px; height: 20px; margin-right: 5px; }
         #auth-container { margin-bottom: 10px; }
         #filter { height: 100px; }
         #notes-section textarea { height: 100px; }
@@ -220,6 +227,7 @@
                         formattedAddress: results[0].formatted_address
                     });
                 } else {
+                    console.error('Geocode failed: ' + status);
                     alert('Geocode failed: ' + status);
                     callback(null);
                 }
@@ -350,12 +358,23 @@
 
         function initMap(filters = ["all"], search = "") {
             console.log("Initializing map...");
+            if (!document.getElementById("map")) {
+                console.error("Map container not found!");
+                alert("Map container not found. Please check the HTML.");
+                return;
+            }
             if (!map) {
-                map = new google.maps.Map(document.getElementById("map"), {
-                    zoom: 7,
-                    center: { lat: 35.7796, lng: -78.6382 }
-                });
-                console.log("Map initialized successfully");
+                try {
+                    map = new google.maps.Map(document.getElementById("map"), {
+                        zoom: 7,
+                        center: { lat: 35.7796, lng: -78.6382 }
+                    });
+                    console.log("Map initialized successfully");
+                } catch (error) {
+                    console.error("Failed to initialize map:", error);
+                    alert("Failed to initialize map. Check console for details.");
+                    return;
+                }
             }
 
             markers.forEach(marker => marker.setMap(null));
@@ -383,7 +402,7 @@
                     if (marker) {
                         if (currentInfoWindow) currentInfoWindow.close();
                         marker.infoWindow.open(map, marker);
-                        currentInfoWindow = marker ಥ_ಥinfoWindow;
+                        currentInfoWindow = marker.infoWindow;
                     }
                 };
                 customerListUl.appendChild(li);
@@ -439,6 +458,14 @@
                 markers.push(marker);
             });
         }
+
+        // Handle Google Maps API load errors
+        window.addEventListener('error', (event) => {
+            if (event.target.src && event.target.src.includes('maps.googleapis.com')) {
+                console.error("Google Maps API failed to load:", event);
+                alert("Failed to load Google Maps API. Check your API key or network connection.");
+            }
+        });
     </script>
 
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAk5eJEWBbPMOJjybLkJvQ9vJgvFw87030&callback=initMap" async defer></script>
