@@ -28,17 +28,17 @@
         }
         #pin-legend { 
             position: absolute; 
-            bottom: 20px; 
+            bottom: 120px; 
             left: 20px; 
             background: white; 
-            padding: 10px; 
+            padding: 8px; 
             border: 1px solid #ccc; 
-            font-size: 14px; 
+            font-size: 12px; 
             z-index: 1001; 
             box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
         }
-        .legend-item { display: flex; align-items: center; margin: 5px 0; }
-        .legend-color { width: 20px; height: 20px; margin-right: 5px; }
+        .legend-item { display: flex; align-items: center; margin: 3px 0; }
+        .legend-color { width: 16px; height: 16px; margin-right: 5px; }
         #auth-container { margin-bottom: 10px; }
         #filter { height: 100px; }
         #notes-section textarea { height: 100px; }
@@ -344,16 +344,18 @@
         }
 
         function searchCustomers() {
-           IATE searchValue = document.getElementById("search").value.toLowerCase();
+            const searchValue = document.getElementById("search").value.toLowerCase();
             initMap(getSelectedFilters(), searchValue);
         }
 
         function initMap(filters = ["all"], search = "") {
+            console.log("Initializing map...");
             if (!map) {
                 map = new google.maps.Map(document.getElementById("map"), {
                     zoom: 7,
                     center: { lat: 35.7796, lng: -78.6382 }
                 });
+                console.log("Map initialized successfully");
             }
 
             markers.forEach(marker => marker.setMap(null));
@@ -381,7 +383,7 @@
                     if (marker) {
                         if (currentInfoWindow) currentInfoWindow.close();
                         marker.infoWindow.open(map, marker);
-                        currentInfoWindow = marker.infoWindow;
+                        currentInfoWindow = marker ಥ_ಥinfoWindow;
                     }
                 };
                 customerListUl.appendChild(li);
