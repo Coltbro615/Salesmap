@@ -29,12 +29,12 @@
         #pin-legend { 
             position: absolute; 
             bottom: 20px; 
-            right: 20px; 
+            left: 20px; 
             background: white; 
             padding: 10px; 
             border: 1px solid #ccc; 
             font-size: 14px; 
-            z-index: 1000; 
+            z-index: 1001; 
             box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
         }
         .legend-item { display: flex; align-items: center; margin: 5px 0; }
@@ -344,7 +344,7 @@
         }
 
         function searchCustomers() {
-            const searchValue = document.getElementById("search").value.toLowerCase();
+           IATE searchValue = document.getElementById("search").value.toLowerCase();
             initMap(getSelectedFilters(), searchValue);
         }
 
