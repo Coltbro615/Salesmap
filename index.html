@@ -43,7 +43,7 @@
         .priority-medium { color: #d4a017; }
         .priority-low { color: red; }
         .priority-never { color: orange; }
-        .priority-no { color: gray; }
+        .priority-no { color: purple; }
         .priority-overdue { color: pink; }
     </style>
 </head>
@@ -67,7 +67,7 @@
                 <option value="medium">Medium Priority (Yellow)</option>
                 <option value="low">Low Priority (Red)</option>
                 <option value="never">New Visit (Orange)</option>
-                <option value="no">No Visit (Gray)</option>
+                <option value="no">No Visit (Purple)</option>
             </select>
             <div id="notes-section">
                 <input id="contactName" placeholder="Contact Name" disabled>
@@ -95,7 +95,7 @@
                 <option value="medium">Medium (Yellow)</option>
                 <option value="low">Low (Red)</option>
                 <option value="never">New Visit (Orange)</option>
-                <option value="no">No Visit (Gray)</option>
+                <option value="no">No Visit (Purple)</option>
                 <option value="overdue">Overdue (Pink)</option>
             </select>
             <h3>Search Customer</h3>
@@ -115,7 +115,7 @@
         <div class="legend-item"><div class="legend-color" style="background-color: yellow;"></div>Medium Priority</div>
         <div class="legend-item"><div class="legend-color" style="background-color: red;"></div>Low Priority</div>
         <div class="legend-item"><div class="legend-color" style="background-color: orange;"></div>New Visit</div>
-        <div class="legend-item"><div class="legend-color" style="background-color: gray;"></div>No Visit</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: purple;"></div>No Visit</div>
         <div class="legend-item"><div class="legend-color" style="background-color: pink;"></div>Overdue</div>
     </div>
 
@@ -203,7 +203,8 @@
                         name: c.name,
                         overdue: isOverdue(c),
                         lat: c.lat,
-                        lng: c.lng
+                        lng: c.lng,
+                        priority: c.priority
                     })));
                     initMap(getSelectedFilters());
                 }, (error) => {
@@ -429,8 +430,11 @@
                         case "medium": pinColor = "yellow"; break;
                         case "low": pinColor = "red"; break;
                         case "never": pinColor = "orange"; break;
-                        case "no": pinColor = "gray"; break;
-                        default: pinColor = "gray";
+                        case "no":
+                            pinColor = "purple";
+                            console.log("Processing No Visit customer:", customer.name);
+                            break;
+                        default: pinColor = "purple";
                     }
                 }
 
