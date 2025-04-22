@@ -7,9 +7,9 @@
         body { margin: 0; font-family: Arial, sans-serif; height: auto; }
         #main-container { display: flex; }
         #map { 
-            height: 100vh; 
+            height: 100vh !important; 
             min-height: 100vh; 
-            width: 70%; 
+            width: 70% !important; 
             min-width: 70%; 
             position: relative; 
             display: block; 
@@ -22,20 +22,9 @@
         #customer-list li:hover { background: #ddd; }
         input, textarea, select { width: 100%; margin: 5px 0; }
         button { margin: 5px 0; }
-        #legend { 
-            position: absolute; 
-            bottom: 20px; 
-            left: 20px; 
-            background: white; 
-            padding: 10px; 
-            border: 1px solid #ccc; 
-            font-size: 14px; 
-            z-index: 1000; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
-        }
         #pin-legend { 
             position: absolute; 
-            bottom: 20px; 
+            bottom: 100px; 
             left: 20px; 
             background: white; 
             padding: 10px; 
@@ -358,14 +347,16 @@
 
         function initMap(filters = ["all"], search = "") {
             console.log("Initializing map...");
-            if (!document.getElementById("map")) {
+            const mapDiv = document.getElementById("map");
+            if (!mapDiv) {
                 console.error("Map container not found!");
                 alert("Map container not found. Please check the HTML.");
                 return;
             }
+            console.log("Map div dimensions:", mapDiv.offsetWidth, mapDiv.offsetHeight);
             if (!map) {
                 try {
-                    map = new google.maps.Map(document.getElementById("map"), {
+                    map = new google.maps.Map(mapDiv, {
                         zoom: 7,
                         center: { lat: 35.7796, lng: -78.6382 }
                     });
@@ -381,7 +372,7 @@
             markers = [];
 
             const filteredCustomers = window.customers.filter(customer => {
-                const isOverdueCustomer = численcustomer);
+                const isOverdueCustomer = isOverdue(customer);
                 const matchesFilter = filters.includes("all") || 
                     filters.includes(customer.priority) ||
                     (filters.includes("overdue") && isOverdueCustomer);
@@ -464,6 +455,14 @@
             if (event.target.src && event.target.src.includes('maps.googleapis.com')) {
                 console.error("Google Maps API failed to load:", event);
                 alert("Failed to load Google Maps API. Check your API key or network connection.");
+            }
+        });
+
+        // Ensure map resizes correctly
+        window.addEventListener('resize', () => {
+            if (map) {
+                google.maps.event.trigger(map, 'resize');
+                console.log("Map resized");
             }
         });
     </script>
