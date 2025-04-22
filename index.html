@@ -7,9 +7,9 @@
         body { margin: 0; font-family: Arial, sans-serif; height: auto; }
         #main-container { display: flex; }
         #map { 
-            height: 100vh !important; 
+            height: 100vh; 
             min-height: 100vh; 
-            width: 70% !important; 
+            width: 70%; 
             min-width: 70%; 
             position: relative; 
             display: block; 
@@ -24,7 +24,7 @@
         button { margin: 5px 0; }
         #pin-legend { 
             position: absolute; 
-            bottom: 100px; 
+            bottom: 160px; 
             left: 20px; 
             background: white; 
             padding: 10px; 
@@ -44,7 +44,7 @@
         .priority-low { color: red; }
         .priority-never { color: orange; }
         .priority-no { color: gray; }
-        .priority-overdue { color: purple; }
+        .priority-overdue { color: black; }
     </style>
 </head>
 <body>
@@ -94,7 +94,7 @@
                 <option value="low">Low (Red)</option>
                 <option value="never">New Visit (Orange)</option>
                 <option value="no">No Visit (Gray)</option>
-                <option value="overdue">Overdue (Purple)</option>
+                <option value="overdue">Overdue (White)</option>
             </select>
             <h3>Search Customer</h3>
             <input id="search" placeholder="Search by name" disabled onkeyup="searchCustomers()">
@@ -114,7 +114,7 @@
         <div class="legend-item"><div class="legend-color" style="background-color: red;"></div>Low Priority</div>
         <div class="legend-item"><div class="legend-color" style="background-color: orange;"></div>New Visit</div>
         <div class="legend-item"><div class="legend-color" style="background-color: gray;"></div>No Visit</div>
-        <div class="legend-item"><div class="legend-color" style="background-color: purple;"></div>Overdue</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: white; border: 1px solid #ccc;"></div>Overdue</div>
     </div>
 
     <!-- Firebase Compat SDK -->
@@ -402,7 +402,7 @@
             filteredCustomers.forEach((customer) => {
                 let pinColor;
                 if (isOverdue(customer)) {
-                    pinColor = "purple";
+                    pinColor = "white";
                 } else {
                     switch (customer.priority) {
                         case "urgent": pinColor = "blue"; break;
