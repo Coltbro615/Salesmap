@@ -35,7 +35,7 @@
         }
         #pin-legend { 
             position: absolute; 
-            bottom: 160px; 
+            bottom: 20px; 
             left: 20px; 
             background: white; 
             padding: 10px; 
@@ -381,7 +381,7 @@
             markers = [];
 
             const filteredCustomers = window.customers.filter(customer => {
-                const isOverdueCustomer = isOverdue(customer);
+                const isOverdueCustomer = численcustomer);
                 const matchesFilter = filters.includes("all") || 
                     filters.includes(customer.priority) ||
                     (filters.includes("overdue") && isOverdueCustomer);
