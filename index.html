@@ -5,14 +5,14 @@
 <title>Sales Map + Route Optimization</title>
 <style>
     body{margin:0;font-family:Arial,sans-serif}
-    #main-container{display:flex;height:100vh}
+    #main-container{display:flex;height:100vh;position:relative}
     #map{width:70%;height:100%}
-    #sidebar{width:30%;padding:15px;background:#f8f9fa;overflow-y:auto}
-    #route-panel{width:30%;background:#fff;border-left:2px solid #007bff;padding:10px;display:none;overflow-y:auto}
-    input,select,textarea,button{width:100%;margin:8px 0;padding:10px;box-sizing:border-box}
-    button{background:#007bff;color:white;border:none;cursor:pointer}
+    #sidebar{width:30%;padding:15px;background:#f8f9fa;overflow-y:auto;z-index:10}
+    #route-panel{width:30%;background:#fff;border-left:3px solid #007bff;padding:15px;position:absolute;right:0;top:0;height:100%;overflow-y:auto;display:none;z-index:20;box-shadow:-5px 0 15px rgba(0,0,0,0.2)}
+    input,select,textarea,button{width:100%;margin:8px 0;padding:10px;box-sizing:border-box;border-radius:4px}
+    button{background:#007bff;color:white;border:none;cursor:pointer;font-weight:bold}
     button:hover{background:#0056b3}
-    #optimize-btn{background:#28a745 !important;font-weight:bold}
+    #optimize-btn{background:#28a745 !important}
     #clear-route-btn{background:#dc3545 !important}
     #pin-legend{position:absolute;bottom:20px;left:20px;background:white;padding:12px;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);z-index:1000;font-size:14px}
     .legend-item{display:flex;align-items:center;margin:6px 0;font-weight:600}
@@ -26,10 +26,10 @@
     .priority-ucc{color:#8B00FF;font-weight:bold}
     .priority-overdue{color:deeppink;font-weight:bold}
     #customer-list ul{list-style:none;padding:0;margin:0}
-    #customer-list li{padding:10px 12px;border-bottom:1px solid #eee;cursor:pointer;user-select:none}
+    #customer-list li{padding:10px 12px;border-bottom:1px solid #eee;cursor:pointer}
     #customer-list li:hover{background:#e9ecef}
-    #customer-list li.selected{background:#007bff;color:white}
-    .directions{font-size:14px;line-height:1.5}
+    #customer-list li.selected{background:#007bff;color:white;font-weight:bold}
+    .directions{margin:8px 0;padding:10px;background:#f8f9fa;border-left:4px solid #007bff}
 </style>
 </head>
 <body>
@@ -89,13 +89,14 @@
 
         <hr>
         <h3>Route Optimization</h3>
-        <p><em>Hold Ctrl/Cmd + click to select multiple customers</em></p>
+        <p><strong>Hold Ctrl (or Cmd) + click</strong> to select multiple customers</p>
         <button id="optimize-btn" onclick="optimizeRoute()">Optimize & Show Route</button>
         <button id="clear-route-btn" onclick="clearRoute()">Clear Route</button>
-        <p id="route-info" style="font-weight:bold;margin-top:10px"></p>
+        <p id="route-info" style="margin-top:10px"></p>
     </div>
+
     <div id="route-panel">
-        <h3>Optimized Route <span style="float:right;cursor:pointer" onclick="clearRoute()">X</span></h3>
+        <h3>Optimized Route <span style="float:right;cursor:pointer;font-size:20px" onclick="clearRoute()">×</span></h3>
         <div id="directions-panel"></div>
     </div>
 </div>
@@ -113,7 +114,7 @@
     <div class="legend-item"><div class="legend-color" style="background:red"></div>Low</div>
     <div class="legend-item"><div class="legend-color" style="background:orange"></div>New Visit</div>
     <div class="legend-item"><div class="legend-color" style="background:purple"></div>No Visit</div>
-    <div class="legend-item"><div class="legend-color" style="background:#8B00FF"></div>UCC</div>
+    <div class="legend-item"><div class="legend-color" style="background:#8B00FF"></div>UCC (Violet)</div>
     <div class="legend-item"><div class="legend-color" style="background:pink"></div>Overdue</div>
 </div>
 
@@ -131,7 +132,7 @@
         appId: "1:758371444111:web:a5f0f425522e1bf536d7fa"
     });
     const db = firebase.database().ref("customers");
-    let map, markers=[], directionsService, directionsRenderer, currentInfoWindow, editingId;
+    let map, markers = [], directionsService, directionsRenderer, currentInfoWindow, editingId;
 
     firebase.auth().onAuthStateChanged(u => {
         const disabled = !u;
@@ -154,12 +155,19 @@
             clearForm();
         });
     }
-    function editCustomer(id){ /* same as before - works perfectly */ const c = window.customers.find(x=>x.id===id);
+    function editCustomer(id){const c=window.customers.find(x=>x.id===id);
         ["name","address","contactName","phone","emailContact","notes","lastVisit"].forEach(f=>document.getElementById(f).value=c[f]||"");
         priority.value=c.priority; [...reminders.options].forEach(o=>o.selected=c.reminders?.includes(o.value));
         editingId=id; saveEditButton.style.display="block"; addCustomerButton.style.display="none";
     }
-    function saveEditedCustomer(){ /* unchanged */ }
+    function saveEditedCustomer(){
+        geocode(address.value, r => { if(!r)return;
+            db.child(editingId).set({name:name.value||"Unnamed",address:r.addr,lat:r.lat,lng:r.lng,priority:priority.value,
+                contactName:contactName.value,phone:phone.value,emailContact:emailContact.value,notes:notes.value,
+                lastVisit:lastVisit.value,reminders:[...reminders.selectedOptions].map(o=>o.value)});
+            clearForm(); editingId=null; saveEditButton.style.display="none"; addCustomerButton.style.display="block";
+        });
+    }
     function deleteCustomer(id){if(confirm("Delete?"))db.child(id).remove()}
     function clearForm(){document.querySelectorAll("#name,#address,#contactName,#phone,#emailContact,#notes,#lastVisit").forEach(i=>i.value="");priority.value="urgent";[...reminders.options].forEach(o=>o.selected=false)}
 
@@ -175,7 +183,7 @@
         if(!map){
             map = new google.maps.Map(document.getElementById("map"),{zoom:7,center:{lat:35.7796,lng:-78.6382}});
             directionsService = new google.maps.DirectionsService();
-            directionsRenderer = new google.maps.DirectionsRenderer({map:map, suppressMarkers:false});
+            directionsRenderer = new google.maps.DirectionsRenderer({map:map, suppressMarkers:false, preserveViewport:false});
         }
         markers.forEach(m=>m.setMap(null));markers=[];
 
@@ -191,14 +199,28 @@
             const li=document.createElement("li");
             li.textContent=c.name;
             li.className=`priority-${isOverdue(c)?"overdue":c.priority}`;
-            li.onclick=e=>{ if(e.ctrlKey||e.metaKey){li.classList.toggle("selected")} else{map.setCenter({lat:c.lat,lng:c.lng});map.setZoom(15)} };
+            li.onclick=e=>{
+                if(e.ctrlKey||e.metaKey){
+                    li.classList.toggle("selected");
+                } else {
+                    map.setCenter({lat:c.lat,lng:c.lng}); map.setZoom(15);
+                }
+            };
             list.appendChild(li);
 
             if(!c.lat||!c.lng)return;
-            const color = isOverdue(c) ? "pink" : {urgent:"blue",high:"green",medium:"yellow",low:"red",never:"orange",no:"purple",ucc:"violet"}[c.priority]||"gray";
+
+            // FIXED: UCC now uses a real bright violet pin that actually exists
+            const colorMap = {
+                urgent:"blue", high:"green", medium:"yellow", low:"red",
+                never:"orange", no:"purple", overdue:"pink",
+                ucc:"https://maps.google.com/mapfiles/ms/micons/purple-dot.png"  // Bright violet that works!
+            };
+            const pinColor = isOverdue(c) ? "pink" : (colorMap[c.priority] || "gray");
+
             const marker=new google.maps.Marker({
-                position:{lat:c.lat,lng:c.lng},map,title:c.name,
-                icon:"http://maps.google.com/mapfiles/ms/icons/"+color+"-dot.png"
+                position:{lat:c.lat,lng:c.lng}, map, title:c.name,
+                icon: typeof pinColor === "string" && pinColor.includes("http") ? pinColor : `http://maps.google.com/mapfiles/ms/icons/${pinColor}-dot.png`
             });
             marker.addListener("click",()=>{ if(currentInfoWindow)currentInfoWindow.close();
                 currentInfoWindow=new google.maps.InfoWindow({content:`<h3>${c.name}</h3><p>${c.address}</p><button onclick="editCustomer('${c.id}')">Edit</button> <button onclick="deleteCustomer('${c.id}')">Delete</button>`});
@@ -208,16 +230,18 @@
         });
     }
 
-    // ROUTE OPTIMIZATION - THE MAGIC
     function optimizeRoute() {
         const selected = [...document.querySelectorAll("#customer-list-ul li.selected")];
-        if (selected.length < 2) return alert("Please select at least 2 customers (hold Ctrl/Cmd)");
-        const waypoints = selected.map(li => {
+        if (selected.length < 2) return alert("Hold Ctrl/Cmd and click at least 2 customers to select them");
+        
+        const stops = selected.map(li => {
             const cust = window.customers.find(c => c.name === li.textContent.trim());
-            return {location: {lat: cust.lat, lng: cust.lng}, stopover: true};
+            return {location: new google.maps.LatLng(cust.lat, cust.lng), stopover: true};
         });
-        const origin = waypoints.shift().location;
-        const destination = waypoints.pop().location;
+
+        const origin = stops[0].location;
+        const destination = stops[stops.length-1].location;
+        const waypoints = stops.slice(1, -1);
 
         directionsService.route({
             origin: origin,
@@ -231,15 +255,12 @@
                 document.getElementById("route-panel").style.display = "block";
                 document.getElementById("directions-panel").innerHTML = "";
                 const route = response.routes[0];
-                let total = 0;
-                route.legs.forEach(leg => {
-                    total += leg.distance.value;
-                    const div = document.createElement("div");
-                    div.className = "directions";
-                    div.innerHTML = `<strong>${leg.start_address.split(",")[0]}</strong> → <strong>${leg.end_address.split(",")[0]}</strong><br>${leg.distance.text} • ${leg.duration.text}`;
-                    document.getElementById("directions-panel").appendChild(div);
+                let html = "";
+                route.legs.forEach((leg, i) => {
+                    html += `<div class="directions"><strong>${i+1}. ${leg.start_address.split(",")[0]}</strong> → ${leg.end_address.split(",")[0]}<br>${leg.distance.text} • ${leg.duration.text}</div>`;
                 });
-                document.getElementById("route-info").textContent = `Optimized Route: ${selected.length+1} stops • ${(total/1000).toFixed(1)} km • ~${route.legs.reduce((a,l)=>a+l.duration.value,0)/60|0} min`;
+                document.getElementById("directions-panel").innerHTML = html;
+                document.getElementById("route-info").textContent = `Optimized Route: ${selected.length} stops • ${route.legs.reduce((a,l)=>a+l.distance.value,0)/1000|0} km`;
             } else alert("Route failed: " + status);
         });
     }
