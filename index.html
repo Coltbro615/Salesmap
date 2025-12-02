@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Sales Map - FINAL & PERFECT</title>
+<title>Sales Map - FINAL PERFECTION</title>
 <style>
-    body{margin:0;font-family:Arial,sans-serif}
-    #main-container{display:flex;height:100vh;position:relative}
-    #map{width:70%;height:100%}
-    #sidebar{width:30%;padding:20px;background:#f8f9fa;overflow-y:auto}
-    #route-panel{width:30%;background:#fff;border-left:5px solid #007bff;padding:20px;position:absolute;right:0;top:0;height:100%;overflow-y:auto;display:none;z-index:20;box-shadow:-10px 0 30px rgba(0,0,0,0.3)}
-    input,select,textarea,button{width:100%;margin:8px 0;padding:12px;box-sizing:border-box;border-radius:6px;border:1px solid #ccc}
-    button{background:#007bff;color:white;border:none;cursor:pointer;font-weight:bold;font-size:15px}
+    body{margin:0;font-family:Arial,sans-serif;background:#f4f6f9}
+    #main-container{position:relative;height:100vh}
+    #map{height:100vh;width:100%}
+    #sidebar{width:380px;position:absolute;top:0;left:0;height:100%;background:#fff;padding:20px;overflow-y:auto;box-shadow:2px 0 15px rgba(0,0,0,0.2);z-index:10}
+    #route-panel{width:380px;position:absolute;top:0;right:0;height:100%;background:#fff;padding:20px;overflow-y:auto;box-shadow:-2px 0 15px rgba(0,0,0,0.2);z-index:20;display:none}
+    input,select,textarea,button{width:100%;margin:8px 0;padding:12px;border-radius:6px;border:1px solid #ccc;font-size:15px}
+    button{background:#007bff;color:white;border:none;cursor:pointer;font-weight:bold}
     button:hover{background:#0056b3}
     #optimize-btn{background:#28a745 !important;padding:16px;font-size:18px}
     #clear-route-btn{background:#dc3545 !important}
@@ -25,8 +25,9 @@
     .priority-no{color:purple;font-weight:bold}
     .priority-ucc{color:#8B00FF;font-weight:bold}
     .priority-overdue{color:deeppink;font-weight:bold}
-    #customer-list ul{list-style:none;padding:0;margin:0;background:white;border:1px solid #ddd;border-radius:6px}
-    #customer-list li{padding:12px 16px;border-bottom:1px solid #eee;cursor:pointer;transition:0.2s}
+    #customer-list-container{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);width:60%;max-width:800px;background:white;padding:15px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.3);z-index:5}
+    #customer-list ul{list-style:none;padding:0;margin:0;max-height:180px;overflow-y:auto}
+    #customer-list li{padding:10px 14px;border-bottom:1px solid #eee;cursor:pointer;transition:0.2s}
     #customer-list li:hover{background:#e3f2fd}
     #customer-list li.selected{background:#1976d2;color:white;font-weight:bold}
     .directions{margin:12px 0;padding:14px;background:#f8f9fa;border-left:5px solid #007bff;border-radius:6px}
@@ -37,6 +38,7 @@
 <div id="main-container">
     <div id="map"></div>
 
+    <!-- LEFT SIDEBAR -->
     <div id="sidebar">
         <input id="email" type="email" placeholder="Email">
         <input id="password" type="password" placeholder="Password">
@@ -91,33 +93,36 @@
 
         <hr>
         <h3>Route Optimization</h3>
-        <p><strong>Click any pin</strong> to select • <strong>Double-click</strong> to edit</p>
+        <p><strong>Click pins</strong> to select • <strong>Double-click</strong> to edit</p>
         <button id="optimize-btn" onclick="optimizeRoute()">Optimize & Show Route</button>
         <button id="clear-route-btn" onclick="clearRoute()">Clear Route</button>
         <p id="route-info" style="margin-top:15px;font-weight:bold;color:#28a745">Click pins to select</p>
     </div>
 
+    <!-- RIGHT ROUTE PANEL -->
     <div id="route-panel">
         <h3>Optimized Route <span style="float:right;cursor:pointer;font-size:24px" onclick="clearRoute()">×</span></h3>
         <div id="directions-panel"></div>
     </div>
-</div>
 
-<div id="customer-list-container" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:40%;background:white;padding:10px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.3);z-index:10">
-    <h3 style="margin:0 0 10px 0;text-align:center">Customer List</h3>
-    <div id="customer-list" style="max-height:200px;overflow-y:auto"><ul id="customer-list-ul"></ul></div>
-</div>
+    <!-- CUSTOMER LIST UNDER MAP -->
+    <div id="customer-list-container">
+        <h3 style="margin:0 0 10px;text-align:center">Customer List</h3>
+        <div id="customer-list"><ul id="customer-list-ul"></ul></div>
+    </div>
 
-<div id="pin-legend">
-    <h4>Pin Legend</h4>
-    <div class="legend-item"><div class="legend-color" style="background:blue"></div>Hotlist</div>
-    <div class="legend-item"><div class="legend-color" style="background:green"></div>High</div>
-    <div class="legend-item"><div class="legend-color" style="background:yellow"></div>Medium</div>
-    <div class="legend-item"><div class="legend-color" style="background:red"></div>Low</div>
-    <div class="legend-item"><div class="legend-color" style="background:orange"></div>New Visit</div>
-    <div class="legend-item"><div class="legend-color" style="background:purple"></div>No Visit</div>
-    <div class="legend-item"><div class="legend-color" style="background:#8B00FF"></div>UCC (Bright Violet)</div>
-    <div class="legend-item"><div class="legend-color" style="background:pink"></div>Overdue</div>
+    <!-- PIN LEGEND -->
+    <div id="pin-legend">
+        <h4>Pin Legend</h4>
+        <div class="legend-item"><div class="legend-color" style="background:blue"></div>Hotlist</div>
+        <div class="legend-item"><div class="legend-color" style="background:green"></div>High</div>
+        <div class="legend-item"><div class="legend-color" style="background:yellow"></div>Medium</div>
+        <div class="legend-item"><div class="legend-color" style="background:red"></div>Low</div>
+        <div class="legend-item"><div class="legend-color" style="background:orange"></div>New Visit</div>
+        <div class="legend-item"><div class="legend-color" style="background:purple"></div>No Visit</div>
+        <div class="legend-item"><div class="legend-color" style="background:#8B00FF"></div>UCC (Bright Violet)</div>
+        <div class="legend-item"><div class="legend-color" style="background:pink"></div>Overdue</div>
+    </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -149,9 +154,9 @@
     function signOut(){firebase.auth().signOut()}
     function loadCustomers(){db.on("value", s => {window.customers = s.val()?Object.entries(s.val()).map(([k,v])=>({id:k,...v})):[];initMap(getFilters())})}
 
-    function geocode(a,cb){new google.maps.Geocoder().geocode({address:a},(r,s)=>{s==="OK"?cb({lat:r[0].geometry.location.lat(),lng:r[0].geometry.location.lng(),addr:r[0].formatted_address}):alert("Geocode failed: "+s);cb(null)})}
+    function geocode(a,cb){new google.maps.Geocoder().geocode({address:a},(r,s)=>{s==="OK"?cb({lat:r[0].geometry.location.lat(),lng:r[0].geometry.location.lng(),addr:r[0].formatted_address}):cb(null)})}
     function addCustomer(){
-        geocode(address.value, r => { if(!r)return;
+        geocode(address.value, r => { if(!r)return alert("Invalid address");
             db.push({name:name.value||"Unnamed",address:r.addr,lat:r.lat,lng:r.lng,priority:priority.value,
                 contactName:contactName.value,phone:phone.value,emailContact:emailContact.value,notes:notes.value,
                 lastVisit:lastVisit.value,reminders:[...reminders.selectedOptions].map(o=>o.value)});
@@ -164,7 +169,7 @@
         editingId=id; saveEditButton.style.display="block"; addCustomerButton.style.display="none";
     }
     function saveEditedCustomer(){
-        geocode(address.value, r => { if(!r)return;
+        geocode(address.value, r => { if(!r)return alert("Invalid address");
             db.child(editingId).set({name:name.value||"Unnamed",address:r.addr,lat:r.lat,lng:r.lng,priority:priority.value,
                 contactName:contactName.value,phone:phone.value,emailContact:emailContact.value,notes:notes.value,
                 lastVisit:lastVisit.value,reminders:[...reminders.selectedOptions].map(o=>o.value)});
@@ -192,8 +197,8 @@
             directionsRenderer = new google.maps.DirectionsRenderer({map:map, suppressMarkers:false});
         }
         markers.forEach(m=>m.setMap(null)); markers=[]; selectedIds.clear();
+        document.getElementById("customer-list-ul").innerHTML="";
 
-        const list = document.getElementById("customer-list-ul"); list.innerHTML="";
         const filtered = window.customers.filter(c=>{
             const overdue=isOverdue(c);
             const f = filters.includes("all")||filters.includes(c.priority)||(filters.includes("overdue")&&overdue);
@@ -209,7 +214,7 @@
                 const marker = markers.find(m=>m.customerId===c.id);
                 if(marker) toggleSelection(c.id, marker, li);
             };
-            list.appendChild(li);
+            document.getElementById("customer-list-ul").appendChild(li);
 
             if(!c.lat||!c.lng) return;
 
@@ -255,6 +260,8 @@
     function optimizeRoute() {
         if(selectedIds.size < 2) return alert("Select at least 2 pins first!");
         const selected = Array.from(selectedIds).map(id => window.customers.find(c=>c.id===id));
+        if(selected.some(c=>!c.lat||!c.lng)) return alert("One of the selected customers has no location");
+
         const waypoints = selected.slice(1,-1).map(c=>({location:{lat:c.lat,lng:c.lng},stopover:true}));
 
         directionsService.route({
@@ -262,7 +269,7 @@
             destination: {lat:selected[selected.length-1].lat, lng:selected[selected.length-1].lng},
             waypoints: waypoints,
             optimizeWaypoints: true,
-            travelMode: "DRIVING"
+            travelMode: google.maps.TravelMode.DRIVING
         }, (res, status) => {
             if(status==="OK"){
                 directionsRenderer.setDirections(res);
@@ -275,7 +282,9 @@
                 });
                 document.getElementById("directions-panel").innerHTML=html;
                 document.getElementById("route-info").textContent=`Optimized ${selected.length} stops!`;
-            } else alert("Route failed: "+status);
+            } else {
+                alert("Route failed: " + status);
+            }
         });
     }
 
