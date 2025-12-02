@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Sales Map - Final Perfect Version</title>
+<title>Sales Map - FINAL WORKING VERSION</title>
 <style>
     body{margin:0;font-family:Arial,sans-serif}
     #main-container{display:flex;height:100vh;position:relative}
@@ -17,103 +17,110 @@
     #pin-legend{position:absolute;bottom:20px;left:20px;background:white;padding:12px;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.4);z-index:1000;font-size:14px}
     .legend-item{display:flex;align-items:center;margin:6px 0;font-weight:600}
     .legend-color{width:18px;height:18px;border-radius:50%;margin-right:10px;border:2px solid #444}
+    .priority-urgent{color:blue;font-weight:bold}
+    .priority-high{color:green;font-weight:bold}
+    .priority-medium{color:#b8860b;font-weight:bold}
+    .priority-low{color:red;font-weight:bold}
+    .priority-never{color:orange;font-weight:bold}
+    .priority-no{color:purple;font-weight:bold}
     .priority-ucc{color:#8B00FF;font-weight:bold}
-    #customer-list ul{list-style:none;padding:0;margin:0}
-    #customer-list li{padding:12px;border-bottom:1px solid #eee;cursor:pointer;transition:0.2s}
-    #customer-list li:hover{background:#e3f2fd}
+    .priority-overdue{color:deeppink;font-weight:bold}
+    #customer-list ul{list-style:none;padding:0;margin:0;background:white;border:1px solid #ddd}
+    #customer-list li{padding:10px 14px;border-bottom:1px solid #eee;cursor:pointer;transition:0.2s}
+    #customer-list li:hover{background:#f0f8ff}
     #customer-list li.selected{background:#1976d2;color:white;font-weight:bold}
     .directions{margin:10px 0;padding:12px;background:#f8f9fa;border-left:4px solid #007bff;border-radius:4px}
 </style>
 </head>
 <body>
 <div id="main-container">
-    <div id="map"></div>
+    <div id="map">div>
     <div id="sidebar">
         <input id="email" type="email" placeholder="Email">
         <input id="password" type="password" placeholder="Password">
-        <button onclick="signIn()">Sign In</button>
-        <button onclick="signOut()" id="signOutButton" style="display:none">Sign Out</button>
-        <p id="auth-status">Not signed in</p>
+        <button onclick="signIn()">Sign Inbutton>
+        <button onclick="signOut()" id="signOutButton" style="display:none">Sign Outbutton>
+        <p id="auth-status">Not signed inp>
 
-        <h2>Add/Edit Customer</h2>
+        <h2>Add/Edit Customerh2>
         <input id="name" placeholder="Customer Name" disabled>
         <input id="address" placeholder="Customer Address" disabled>
         <select id="priority" disabled>
-            <option value="urgent">Hotlist (Blue)</option>
-            <option value="high">High Priority (Green)</option>
-            <option value="medium">Medium Priority (Yellow)</option>
-            <option value="low">Low Priority (Red)</option>
-            <option value="never">New Visit (Orange)</option>
-            <option value="no">No Visit (Purple)</option>
-            <option value="ucc">UCC (Bright Violet)</option>
-        </select>
+            <option value="urgent">Hotlist (Blue)option>
+            <option value="high">High Priority (Green)option>
+            <option value="medium">Medium Priority (Yellow)option>
+            <option value="low">Low Priority (Red)option>
+            <option value="never">New Visit (Orange)option>
+            <option value="no">No Visit (Purple)option>
+            <option value="ucc">UCC (Bright Violet)option>
+        select>
         <input id="contactName" placeholder="Contact Name" disabled>
         <input id="phone" placeholder="Phone" disabled>
         <input id="emailContact" placeholder="Email" disabled>
-        <textarea id="notes" placeholder="Notes" disabled></textarea>
+        <textarea id="notes" placeholder="Notes" disabled>textarea>
         <input id="lastVisit" type="date" disabled>
         <select id="reminders" multiple disabled>
-            <option value="never">Never</option>
-            <option value="1 month">1 Month</option>
-            <option value="2 months">2 Months</option>
-            <option value="3 months">3 Months</option>
-            <option value="4 months">4 Months</option>
-            <option value="6 months">6 Months</option>
-            <option value="12 months">12 Months</option>
-        </select>
-        <button id="addCustomerButton" onclick="addCustomer()" disabled>Add Customer</button>
-        <button id="saveEditButton" onclick="saveEditedCustomer()" style="display:none" disabled>Save Changes</button>
+            <option value="never">Neveroption>
+            <option value="1 month">1 Monthoption>
+            <option value="2 months">2 Monthsoption>
+            <option value="3 months">3 Monthsoption>
+            <option value="4 months">4 Monthsoption>
+            <option value="6 months">6 Monthsoption>
+            <option value="12 months">12 Monthsoption>
+        select>
+        <button id="addCustomerButton" onclick="addCustomer()" disabled>Add Customerbutton>
+        <button id="saveEditButton" onclick="saveEditedCustomer()" style="display:none" disabled>Save Changesbutton>
 
-        <h3>Filter</h3>
+        <h3>Filterh3>
         <select id="filter" multiple size="8" onchange="applyFilter()" disabled>
-            <option value="all" selected>All</option>
-            <option value="urgent">Hotlist</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-            <option value="never">New Visit</option>
-            <option value="no">No Visit</option>
-            <option value="ucc">UCC (Violet)</option>
-            <option value="overdue">Overdue</option>
-        </select>
+            <option value="all" selected>Alloption>
+            <option value="urgent">Hotlistoption>
+            <option value="high">Highoption>
+            <option value="medium">Mediumoption>
+            <option value="low">Lowoption>
+            <option value="never">New Visitoption>
+            <option value="no">No Visitoption>
+            <option value="ucc">UCC (Violet)option>
+            <option value="overdue">Overdueoption>
+        select>
 
-        <h3>Search</h3>
+        <h3>Searchh3>
         <input id="search" placeholder="Search name" onkeyup="searchCustomers()" disabled>
 
         <hr>
-        <h3>Route Optimization</h3>
-        <p>Click pins to select • Double-click pin to edit</p>
-        <button id="optimize-btn" onclick="optimizeRoute()">Optimize & Show Route</button>
-        <button id="clear-route-btn" onclick="clearRoute()">Clear Route</button>
-        <p id="route-info" style="margin-top:10px;font-weight:bold;color:#28a745"></p>
-    </div>
+        <h3>Route Optimizationh3>
+        <p><strong>Click pinsdiv> to select • Double-click to editp>
+        <button id="optimize-btn" onclick="optimizeRoute()">Optimize & Show Routebutton>
+        <button id="clear-route-btn" onclick="clearRoute()">Clear Routebutton>
+        <p id="route-info" style="margin-top:10px;font-weight:bold;color:#28a745">Click pins to selectp>
+    div>
 
     <div id="route-panel">
-        <h3>Optimized Route <span style="float:right;cursor:pointer;font-size:22px" onclick="clearRoute()">X</span></h3>
-        <div id="directions-panel"></div>
-    </div>
-</div>
+        <h3>Optimized Route <span style="float:right;cursor:pointer;font-size:22px" onclick="clearRoute()">Xspan>h3>
+        <div id="directions-panel">div>
+    div>
+div>
 
 <div id="customer-list-container">
-    <h3>Customer List</h3>
-    <div id="customer-list"><ul id="customer-list-ul"></ul></div>
-</div>
+    <h3>Customer Listh3>
+    <div id="customer-list"><ul id="customer-list-ul">ul>div>
+div>
 
 <div id="pin-legend">
-    <h4>Pin Legend</h4>
-    <div class="legend-item"><div class="legend-color" style="background:blue"></div>Hotlist</div>
-    <div class="legend-item"><div class="legend-color" style="background:green"></div>High</div>
-    <div class="legend-item"><div class="legend-color" style="background:yellow"></div>Medium</div>
-    <div class="legend-item"><div class="legend-color" style="background:red"></div>Low</div>
-    <div class="legend-item"><div class="legend-color" style="background:orange"></div>New Visit</div>
-    <div class="legend-item"><div class="legend-color" style="background:purple"></div>No Visit</div>
-    <div class="legend-item"><div class="legend-color" style="background:#8B00FF"></div>UCC (Bright Violet)</div>
-    <div class="legend-item"><div class="legend-color" style="background:pink"></div>Overdue</div>
-</div>
+    <h4>Pin Legendh4>
+    <div class="legend-item"><div class="legend-color" style="background:blue">div>Hotlistdiv>
+    <div class="legend-item"><div class="legend-color" style="background:green">div>Highdiv>
+    <div class="legend-item"><div class="legend-color" style="background:yellow">div>Mediumdiv>
+    <div class="legend-item"><div class="legend-color" style="background:red">div>Lowdiv>
+    <div class="legend-item"><div class="legend-color" style="background:orange">div>New Visitdiv>
+    <div class="legend-item"><div class="legend-color" style="background:purple">div>No Visitdiv>
+    <div class="legend-item"><div class="legend-color" style="background:#8B00FF">div>UCC (Bright Violet)div>
+    <div class="legend-item"><div class="legend-color" style="background:pink">div>Overduediv>
+div>
 
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js">script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js">script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js">script>
 <script>
     firebase.initializeApp({
         apiKey: "AIzaSyA1aUdvuhzMqJAKGNy0ttDVS-QZNib30ZY",
@@ -125,7 +132,7 @@
         appId: "1:758371444111:web:a5f0f425522e1bf536d7fa"
     });
     const db = firebase.database().ref("customers");
-    let map, markers = [], directionsService, directionsRenderer, currentInfoWindow;
+    let map, markers = [], directionsService, directionsRenderer, currentInfoWindow, editingId;
     const selectedIds = new Set();
 
     firebase.auth().onAuthStateChanged(u => {
@@ -133,7 +140,7 @@
         document.querySelectorAll("input,select,textarea,button").forEach(el => el.disabled = disabled);
         document.getElementById("auth-status").textContent = u ? "Signed in as " + u.email : "Not signed in";
         document.getElementById("signOutButton").style.display = u ? "block" : "none";
-        if (u) loadCustomers(); else initMap();
+        if (u) loadCustomers(); else { selectedIds.clear(); initMap(); }
     });
 
     function signIn(){firebase.auth().signInWithEmailAndPassword(email.value, password.value).catch(e=>alert(e.message))}
@@ -144,8 +151,8 @@
     function addCustomer(){
         geocode(address.value, r => { if(!r)return;
             db.push({name:name.value||"Unnamed",address:r.addr,lat:r.lat,lng:r.lng,priority:priority.value,
-                contactName:contactName.value,phone:phone.value,emailContact:emailContact.value,
-                notes:notes.value,lastVisit:lastVisit.value,reminders:[...reminders.selectedOptions].map(o=>o.value)});
+                contactName:contactName.value,phone:phone.value,emailContact:emailContact.value,notes:notes.value,
+                lastVisit:lastVisit.value,reminders:[...reminders.selectedOptions].map(o=>o.value)});
             clearForm();
         });
     }
@@ -193,9 +200,10 @@
         }).sort((a,b)=>a.name.localeCompare(b.name));
 
         filtered.forEach(c=>{
+            // LIST ITEM — now properly color-coded again
             const li=document.createElement("li");
             li.textContent=c.name;
-            li.className=`priority-${isOverdue(c)?"overdue":c.priority}`;
+            li.className = isOverdue(c) ? "priority-overdue" : `priority-${c.priority}`;
             li.onclick = () => {
                 const marker = markers.find(m=>m.customerId===c.id);
                 if(marker) toggleSelection(c.id, marker, li);
@@ -204,9 +212,9 @@
 
             if(!c.lat||!c.lng) return;
 
-            // FIXED: All pins show up correctly + UCC is bright violet
+            // CORRECT PIN COLORS
             const color = isOverdue(c) ? "pink" :
-                c.priority === "ucc" ? "purple" :  // Google only has purple, but we make it BRIGHT below
+                c.priority === "ucc" ? "purple" :  // Google only has purple, but we make it brighter below
                 {urgent:"blue",high:"green",medium:"yellow",low:"red",never:"orange",no:"purple"}[c.priority] || "gray";
 
             const iconUrl = `http://maps.google.com/mapfiles/ms/icons/${color}-dot.png`;
@@ -219,16 +227,14 @@
                 customerId: c.id
             });
 
-            // Single click = select for route
-            marker.addListener("click", () => {
-                toggleSelection(c.id, marker, li);
-            });
+            Single click = select for route
+            marker.addListener("click", () => toggleSelection(c.id, marker, li));
 
-            // Double click = open edit window (this was broken before — now fixed!)
+            Double click = edit/delete (now works!)
             marker.addListener("dblclick", () => {
                 if(currentInfoWindow) currentInfoWindow.close();
                 currentInfoWindow = new google.maps.InfoWindow({
-                    content: `<h3>${c.name}</h3><p>${c.address}</p><button onclick="editCustomer('${c.id}')">Edit</button> <button onclick="deleteCustomer('${c.id}')">Delete</button>`
+                    content: `<h3>${c.name}h3><p>${c.address}p><button onclick="editCustomer('${c.id}')">Editbutton> <button onclick="deleteCustomer('${c.id}')">Deletebutton>`
                 });
                 currentInfoWindow.open(map, marker);
             });
@@ -247,16 +253,17 @@
             selectedIds.add(id);
             marker.setIcon({
                 url: marker.getIcon().url,
-                scaledSize: new google.maps.Size(42,42),
-                anchor: new google.maps.Point(21,42)
+                scaledSize: new google.maps.Size(44,44),
+                anchor: new google.maps.Point(22,44)
             });
             listItem.classList.add("selected");
         }
-        document.getElementById("route-info").textContent = `${selectedIds.size} selected → Click "Optimize & Show Route"`;
+        document.getElementById("route-info").textContent = `${selectedIds.size} selected → Click Optimize`;
     }
 
     function optimizeRoute() {
-        if(selectedIds.size < 2) return alert("Click at least 2 pins to select them first");
+        if(selectedIds.size < 2) return alert("Click at least 2 pins first!");
+
         const selected = Array.from(selectedIds).map(id => window.customers.find(c=>c.id===id));
         const waypoints = selected.slice(1,-1).map(c=>({location:{lat:c.lat,lng:c.lng},stopover:true}));
 
@@ -267,30 +274,33 @@
             optimizeWaypoints: true,
             travelMode: "DRIVING"
         }, (res, status) => {
-            if(status==="OK"){
+            if(status === "OK"){
                 directionsRenderer.setDirections(res);
-                document.getElementById("route-panel").style.display="block";
-                document.getElementById("directions-panel").innerHTML="";
+                document.getElementById("route-panel").style.display = "block";
+                document.getElementById("directions-panel").innerHTML = "";
                 const route = res.routes[0];
-                let html="";
-                route.legs.forEach((leg,i)=>{
-                    html += `<div class="directions">${i+1}. <strong>${selected[i].name}</strong> → ${selected[i+1].name}<br>${leg.distance.text} • ${leg.duration.text}</div>`;
+                let html = "";
+                route.legs.forEach((leg,i) => {
+                    html += `<div class="directions">${i+1}. <strong>${selected[i].name}strong> → ${selected[i+1].name}<br>${leg.distance.text} • ${leg.duration.text}div>`;
                 });
-                document.getElementById("directions-panel").innerHTML=html;
-                document.getElementById("route-info").textContent=`Optimized: ${selected.length} stops`;
+                document.getElementById("directions-panel").innerHTML = html;
+                document.getElementById("route-info").textContent = `Success: Optimized ${selected.length} stops!`;
+            } else {
+                alert("Route failed: " + status);
             }
         });
     }
 
     function clearRoute() {
         directionsRenderer.setDirections({routes:[]});
-        document.getElementById("route-panel").style.display="none";
-        document.getElementById("route-info").textContent="Click pins to select • Double-click to edit";
+        document.getElementById("route-panel").style.display = "none";
+        document.getElementById("route-info").textContent = "Click pins to select • Double-click to edit";
         document.querySelectorAll("#customer-list-ul li.selected").forEach(li=>li.classList.remove("selected"));
         markers.forEach(m=>m.setIcon(m.getIcon()));
         selectedIds.clear();
     }
 </script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAk5eJEWBbPMOJjybLkJvQ9vJgvFw87030&callback=initMap" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAk5eJEWBbPMOJjybLkJvQ9vJgvFw87030&callback=initMap" async defer>script>
 </body>
 </html>
+            
