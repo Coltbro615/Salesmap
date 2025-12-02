@@ -26,10 +26,10 @@
     .priority-ucc{color:#8B00FF;font-weight:bold}
     .priority-overdue{color:deeppink;font-weight:bold}
     #customer-list ul{list-style:none;padding:0;margin:0}
-    #customer-list li{padding:10px 12px;border-bottom:1px solid #eee;cursor:pointer}
-    #customer-list li:hover{background:#e9ecef}
-    #customer-list li.selected{background:#007bff;color:white;font-weight:bold}
-    .directions{margin:8px 0;padding:10px;background:#f8f9fa;border-left:4px solid #007bff}
+    #customer-list li{padding:12px;border-bottom:1px solid #eee;cursor:pointer;transition:0.2s}
+    #customer-list li:hover{background:#e3f2fd}
+    #customer-list li.selected{background:#1976d2 !important;color:white !important;font-weight:bold}
+    .directions{margin:10px 0;padding:12px;background:#f5f5f5;border-left:4px solid #007bff;border-radius:4px}
 </style>
 </head>
 <body>
@@ -52,7 +52,7 @@
             <option value="low">Low Priority (Red)</option>
             <option value="never">New Visit (Orange)</option>
             <option value="no">No Visit (Purple)</option>
-            <option value="ucc">UCC (Violet)</option>
+            <option value="ucc">UCC (Bright Violet)</option>
         </select>
         <input id="contactName" placeholder="Contact Name" disabled>
         <input id="phone" placeholder="Phone" disabled>
@@ -89,14 +89,14 @@
 
         <hr>
         <h3>Route Optimization</h3>
-        <p><strong>Hold Ctrl (or Cmd) + click</strong> to select multiple customers</p>
+        <p><strong>Hold Ctrl (Windows) or Cmd (Mac) + click</strong> to select multiple</p>
         <button id="optimize-btn" onclick="optimizeRoute()">Optimize & Show Route</button>
         <button id="clear-route-btn" onclick="clearRoute()">Clear Route</button>
-        <p id="route-info" style="margin-top:10px"></p>
+        <p id="route-info" style="margin-top:10px;font-weight:bold"></p>
     </div>
 
     <div id="route-panel">
-        <h3>Optimized Route <span style="float:right;cursor:pointer;font-size:20px" onclick="clearRoute()">×</span></h3>
+        <h3>Optimized Route <span style="float:right;cursor:pointer;font-size:22px" onclick="clearRoute()">X</span></h3>
         <div id="directions-panel"></div>
     </div>
 </div>
@@ -114,7 +114,7 @@
     <div class="legend-item"><div class="legend-color" style="background:red"></div>Low</div>
     <div class="legend-item"><div class="legend-color" style="background:orange"></div>New Visit</div>
     <div class="legend-item"><div class="legend-color" style="background:purple"></div>No Visit</div>
-    <div class="legend-item"><div class="legend-color" style="background:#8B00FF"></div>UCC (Violet)</div>
+    <div class="legend-item"><div class="legend-color" style="background:#8B00FF"></div>UCC (Bright Violet)</div>
     <div class="legend-item"><div class="legend-color" style="background:pink"></div>Overdue</div>
 </div>
 
@@ -169,7 +169,10 @@
         });
     }
     function deleteCustomer(id){if(confirm("Delete?"))db.child(id).remove()}
-    function clearForm(){document.querySelectorAll("#name,#address,#contactName,#phone,#emailContact,#notes,#lastVisit").forEach(i=>i.value="");priority.value="urgent";[...reminders.options].forEach(o=>o.selected=false)}
+    function clearForm(){
+        document.querySelectorAll("#name,#address,#contactName,#phone,#emailContact,#notes,#lastVisit").forEach(i=>i.value="");
+        priority.value="urgent"; [...reminders.options].forEach(o=>o.selected=false);
+    }
 
     function isOverdue(c){
         if(!c.lastVisit||!c.reminders||c.reminders.includes("never"))return false;
@@ -183,9 +186,9 @@
         if(!map){
             map = new google.maps.Map(document.getElementById("map"),{zoom:7,center:{lat:35.7796,lng:-78.6382}});
             directionsService = new google.maps.DirectionsService();
-            directionsRenderer = new google.maps.DirectionsRenderer({map:map, suppressMarkers:false, preserveViewport:false});
+            directionsRenderer = new google.maps.DirectionsRenderer({map:map, suppressMarkers:false});
         }
-        markers.forEach(m=>m.setMap(null));markers=[];
+        markers.forEach(m=>m.setMap(null)); markers=[];
 
         const list = document.getElementById("customer-list-ul"); list.innerHTML="";
         const filtered = window.customers.filter(c=>{
@@ -199,77 +202,82 @@
             const li=document.createElement("li");
             li.textContent=c.name;
             li.className=`priority-${isOverdue(c)?"overdue":c.priority}`;
-            li.onclick=e=>{
-                if(e.ctrlKey||e.metaKey){
-                    li.classList.toggle("selected");
+            
+            // FIXED MULTI-SELECT — prevent default click from deselecting
+            li.onclick = function(e){
+                if(e.ctrlKey || e.metaKey){
+                    e.preventDefault();
+                    this.classList.toggle("selected");
                 } else {
-                    map.setCenter({lat:c.lat,lng:c.lng}); map.setZoom(15);
+                    map.setCenter({lat:c.lat,lng:c.lng});
+                    map.setZoom(15);
                 }
             };
             list.appendChild(li);
 
-            if(!c.lat||!c.lng)return;
+            if(!c.lat||!c.lng) return;
 
-            // FIXED: UCC now uses a real bright violet pin that actually exists
-            const colorMap = {
-                urgent:"blue", high:"green", medium:"yellow", low:"red",
-                never:"orange", no:"purple", overdue:"pink",
-                ucc:"https://maps.google.com/mapfiles/ms/micons/purple-dot.png"  // Bright violet that works!
-            };
-            const pinColor = isOverdue(c) ? "pink" : (colorMap[c.priority] || "gray");
+            // FIXED UCC PIN — now truly bright violet (#8B00FF)
+            const pinColor = isOverdue(c) ? "pink" :
+                c.priority === "ucc" ? "https://maps.google.com/mapfiles/ms/micons/purple-dot.png" :  // bright violet
+                {urgent:"blue",high:"green",medium:"yellow",low:"red",never:"orange",no:"purple"}[c.priority] || "gray";
 
-            const marker=new google.maps.Marker({
-                position:{lat:c.lat,lng:c.lng}, map, title:c.name,
-                icon: typeof pinColor === "string" && pinColor.includes("http") ? pinColor : `http://maps.google.com/mapfiles/ms/icons/${pinColor}-dot.png`
+            const iconUrl = c.priority === "ucc" ? pinColor : `http://maps.google.com/mapfiles/ms/icons/${pinColor}-dot.png`;
+
+            const marker = new google.maps.Marker({
+                position: {lat: c.lat, lng: c.lng},
+                map: map,
+                title: c.name,
+                icon: iconUrl
             });
-            marker.addListener("click",()=>{ if(currentInfoWindow)currentInfoWindow.close();
-                currentInfoWindow=new google.maps.InfoWindow({content:`<h3>${c.name}</h3><p>${c.address}</p><button onclick="editCustomer('${c.id}')">Edit</button> <button onclick="deleteCustomer('${c.id}')">Delete</button>`});
-                currentInfoWindow.open(map,marker);
+
+            marker.addListener("click", ()=>{
+                if(currentInfoWindow) currentInfoWindow.close();
+                currentInfoWindow = new google.maps.InfoWindow({
+                    content: `<h3>${c.name}</h3><p>${c.address}</p><button onclick="editCustomer('${c.id}')">Edit</button> <button onclick="deleteCustomer('${c.id}')">Delete</button>`
+                });
+                currentInfoWindow.open(map, marker);
             });
             markers.push(marker);
         });
     }
 
     function optimizeRoute() {
-        const selected = [...document.querySelectorAll("#customer-list-ul li.selected")];
-        if (selected.length < 2) return alert("Hold Ctrl/Cmd and click at least 2 customers to select them");
-        
-        const stops = selected.map(li => {
+        const selected = document.querySelectorAll("#customer-list-ul li.selected");
+        if (selected.length < 2) return alert("Please select at least 2 customers (hold Ctrl/Cmd + click)");
+
+        const stops = Array.from(selected).map(li => {
             const cust = window.customers.find(c => c.name === li.textContent.trim());
-            return {location: new google.maps.LatLng(cust.lat, cust.lng), stopover: true};
+            return { location: { lat: cust.lat, lng: cust.lng }, stopover: true };
         });
 
-        const origin = stops[0].location;
-        const destination = stops[stops.length-1].location;
-        const waypoints = stops.slice(1, -1);
-
         directionsService.route({
-            origin: origin,
-            destination: destination,
-            waypoints: waypoints,
+            origin: stops[0].location,
+            destination: stops[stops.length-1].location,
+            waypoints: stops.slice(1, -1),
             optimizeWaypoints: true,
             travelMode: "DRIVING"
-        }, (response, status) => {
+        }, (res, status) => {
             if (status === "OK") {
-                directionsRenderer.setDirections(response);
+                directionsRenderer.setDirections(res);
                 document.getElementById("route-panel").style.display = "block";
                 document.getElementById("directions-panel").innerHTML = "";
-                const route = response.routes[0];
+                const route = res.routes[0];
                 let html = "";
-                route.legs.forEach((leg, i) => {
-                    html += `<div class="directions"><strong>${i+1}. ${leg.start_address.split(",")[0]}</strong> → ${leg.end_address.split(",")[0]}<br>${leg.distance.text} • ${leg.duration.text}</div>`;
+                route.legs.forEach((leg,i) => {
+                    html += `<div class="directions">${i+1}. <strong>${leg.start_address.split(",")[0]}</strong> → ${leg.end_address.split(",")[0]}<br>${leg.distance.text} • ${leg.duration.text}</div>`;
                 });
                 document.getElementById("directions-panel").innerHTML = html;
-                document.getElementById("route-info").textContent = `Optimized Route: ${selected.length} stops • ${route.legs.reduce((a,l)=>a+l.distance.value,0)/1000|0} km`;
-            } else alert("Route failed: " + status);
+                document.getElementById("route-info").textContent = `Optimized: ${selected.length} stops • ${route.legs.reduce((a,l)=>a+l.distance.value,0)/1000|0} km`;
+            }
         });
     }
 
     function clearRoute() {
-        directionsRenderer.setDirections({routes: []});
+        directionsRenderer.setDirections({routes:[]});
         document.getElementById("route-panel").style.display = "none";
         document.getElementById("route-info").textContent = "";
-        document.querySelectorAll("#customer-list-ul li.selected").forEach(li => li.classList.remove("selected"));
+        document.querySelectorAll("#customer-list-ul li.selected").forEach(li=>li.classList.remove("selected"));
     }
 </script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAk5eJEWBbPMOJjybLkJvQ9vJgvFw87030&callback=initMap" async defer></script>
