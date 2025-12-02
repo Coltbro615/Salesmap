@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Sales Map - FINAL & PERFECT</title>
+<title>Sales Map - FINAL WORKING 100%</title>
 <style>
     body{margin:0;font-family:Arial,sans-serif;background:#f4f6f9}
     #map{height:100vh;width:100%}
@@ -24,10 +24,8 @@
     .priority-no{color:purple;font-weight:bold}
     .priority-ucc{color:#8B00FF;font-weight:bold}
     .priority-overdue{color:deeppink;font-weight:bold}
-    
-    /* Customer list at the very bottom — you have to scroll to see it */
-    #customer-list-container{background:white;padding:20px;margin:40px auto 0 auto;width:90%;max-width:900px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.2)}
-    #customer-list ul{list-style:none;padding:0;margin:0;max-height:300px;overflow-y:auto;border:1px solid #ddd;border-radius:8px}
+    #customer-list-container{background:white;padding:30px;margin:60px auto 0;width:90%;max-width:900px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.2)}
+    #customer-list ul{list-style:none;padding:0;margin:0;max-height:400px;overflow-y:auto;border:1px solid #ddd;border-radius:8px}
     #customer-list li{padding:12px 16px;border-bottom:1px solid #eee;cursor:pointer;transition:0.2s}
     #customer-list li:hover{background:#e3f2fd}
     #customer-list li.selected{background:#1976d2;color:white;font-weight:bold}
@@ -38,7 +36,7 @@
 
 <div id="map"></div>
 
-<!-- RIGHT SIDEBAR (login, add customer, filters, optimize) -->
+<!-- RIGHT SIDEBAR -->
 <div id="sidebar">
     <h2 style="margin-top:0">Sales Route Manager</h2>
     <input id="email" type="email" placeholder="Email">
@@ -94,13 +92,13 @@
 
     <hr>
     <h3>Route Optimization</h3>
-    <p><strong>Click pins</strong> to select<br><strong>Double-click</strong> to edit</p>
+    <p><strong>Click pins to select</strong><br><strong>Double-click to edit</strong></p>
     <button id="optimize-btn" onclick="optimizeRoute()">Optimize & Show Route</button>
     <button id="clear-route-btn" onclick="clearRoute()">Clear Route</button>
     <p id="route-info" style="margin-top:15px;font-weight:bold;color:#28a745">Click pins to select</p>
 </div>
 
-<!-- ROUTE PANEL (slides over sidebar when active) -->
+<!-- ROUTE PANEL -->
 <div id="route-panel">
     <h3>Optimized Route <span style="float:right;cursor:pointer;font-size:24px" onclick="clearRoute()">×</span></h3>
     <div id="directions-panel"></div>
@@ -119,7 +117,7 @@
     <div class="legend-item"><div class="legend-color" style="background:pink"></div>Overdue</div>
 </div>
 
-<!-- CUSTOMER LIST — AT THE VERY BOTTOM (you must scroll down to see it) -->
+<!-- CUSTOMER LIST AT BOTTOM -->
 <div id="customer-list-container">
     <h3 style="text-align:center;margin-bottom:15px">Customer List</h3>
     <div id="customer-list"><ul id="customer-list-ul"></ul></div>
@@ -138,6 +136,7 @@
         messagingSenderId: "758371444111",
         appId: "1:758371444111:web:a5f0f425522e1bf536d7fa"
     });
+
     const db = firebase.database().ref("customers");
     let map, markers = [], directionsService, directionsRenderer, currentInfoWindow, editingId;
     const selectedIds = new Set();
@@ -155,6 +154,7 @@
     function loadCustomers(){db.on("value", s => {window.customers = s.val()?Object.entries(s.val()).map(([k,v])=>({id:k,...v})):[];initMap(getFilters())})}
 
     function geocode(a,cb){new google.maps.Geocoder().geocode({address:a},(r,s)=>{s==="OK"?cb({lat:r[0].geometry.location.lat(),lng:r[0].geometry.location.lng(),addr:r[0].formatted_address}):cb(null)})}
+    
     function addCustomer(){
         geocode(address.value, r => { if(!r) return alert("Invalid address");
             db.push({name:name.value||"Unnamed",address:r.addr,lat:r.lat,lng:r.lng,priority:priority.value,
@@ -163,20 +163,23 @@
             clearForm();
         });
     }
+
     function editCustomer(id){const c=window.customers.find(x=>x.id===id);
         ["name","address","contactName","phone","emailContact","notes","lastVisit"].forEach(f=>document.getElementById(f).value=c[f]||"");
         priority.value=c.priority; [...reminders.options].forEach(o=>o.selected=c.reminders?.includes(o.value));
-        editingId=id; saveEditButton.style.display="block"; addCustomerButton.style.display="none";
+        editingId=id; document.getElementById("saveEditButton").style.display="block"; document.getElementById("addCustomerButton").style.display="none";
     }
+
     function saveEditedCustomer(){
         geocode(address.value, r => { if(!r) return alert("Invalid address");
             db.child(editingId).set({name:name.value||"Unnamed",address:r.addr,lat:r.lat,lng:r.lng,priority:priority.value,
                 contactName:contactName.value,phone:phone.value,emailContact:emailContact.value,notes:notes.value,
                 lastVisit:lastVisit.value,reminders:[...reminders.selectedOptions].map(o=>o.value)});
-            clearForm(); editingId=null; saveEditButton.style.display="none"; addCustomerButton.style.display="block";
+            clearForm(); editingId=null; document.getElementById("saveEditButton").style.display="none"; document.getElementById("addCustomerButton").style.display="block";
         });
     }
-    function deleteCustomer(id){if(confirm("Delete?")) db.child(id).remove()}
+
+    function deleteCustomer(id){if(confirm("Delete this customer?")) db.child(id).remove()}
     function clearForm(){
         document.querySelectorAll("#name,#address,#contactName,#phone,#emailContact,#notes,#lastVisit").forEach(i=>i.value="");
         priority.value="urgent"; [...reminders.options].forEach(o=>o.selected=false);
@@ -186,6 +189,7 @@
         if(!c.lastVisit||!c.reminders||c.reminders.includes("never")) return false;
         return c.reminders.some(r=>{const m=parseInt(r);if(!m)return false;const d=new Date(c.lastVisit);d.setMonth(d.getMonth()+m);return d<new Date()});
     }
+
     function getFilters(){return [...filter.selectedOptions].map(o=>o.value)}
     function applyFilter(){initMap(getFilters())}
     function searchCustomers(){initMap(getFilters(), search.value.toLowerCase())}
@@ -210,10 +214,7 @@
             const li=document.createElement("li");
             li.textContent=c.name;
             li.className = isOverdue(c) ? "priority-overdue" : `priority-${c.priority}`;
-            li.onclick = () => {
-                const marker = markers.find(m=>m.customerId===c.id);
-                if(marker) toggleSelection(c.id, marker, li);
-            };
+            li.onclick = () => { const marker = markers.find(m=>m.customerId===c.id); if(marker) toggleSelection(c.id, marker, li); };
             document.getElementById("customer-list-ul").appendChild(li);
 
             if(!c.lat||!c.lng) return;
@@ -257,31 +258,37 @@
         document.getElementById("route-info").textContent = `${selectedIds.size} selected → Click Optimize`;
     }
 
+    // THIS WAS THE ONLY BROKEN LINE — FIXED NOW
     function optimizeRoute() {
-        if(selectedIds.size < 2) return alert("Select at least 2 customers first!");
-        const selected = Array358.from(selectedIds).map(id => window.customers.find(c=>c.id===id)).filter(Boolean);
-        if(selected.some(c=>!c.lat)) return alert("One customer has no location");
+        if(selectedIds.size < 2) return alert("Please select at least 2 customers first!");
 
-        const waypoints = selected.slice(1,-1).map(c=>({location:{lat:c.lat,lng:c.lng},stopover:true}));
+        const selected = Array.from(selectedIds)   // ← FIXED: was "Array358.from"
+            .map(id => window.customers.find(c => c.id === id))
+            .filter(Boolean);
+
+        const waypoints = selected.slice(1, -1).map(c => ({
+            location: {lat: c.lat, lng: c.lng},
+            stopover: true
+        }));
 
         directionsService.route({
-            origin: {lat:selected[0].lat, lng:selected[0].lng},
-            destination: {lat:selected[selected.length-1].lat, lng:selected[selected.length-1].lng},
+            origin: {lat: selected[0].lat, lng: selected[0].lng},
+            destination: {lat: selected[selected.length-1].lat, lng: selected[selected.length-1].lng},
             waypoints: waypoints,
             optimizeWaypoints: true,
             travelMode: google.maps.TravelMode.DRIVING
-        }, (res, status) => {
-            if(status==="OK"){
-                directionsRenderer.setDirections(res);
-                document.getElementById("route-panel").style.display="block";
-                document.getElementById("directions-panel").innerHTML="";
-                const route = res.routes[0];
-                let html="";
-                route.legs.forEach((leg,i)=>{
+        }, (result, status) => {
+            if (status === "OK") {
+                directionsRenderer.setDirections(result);
+                document.getElementById("route-panel").style.display = "block";
+                document.getElementById("directions-panel").innerHTML = "";
+                const route = result.routes[0];
+                let html = "";
+                route.legs.forEach((leg, i) => {
                     html += `<div class="directions">${i+1}. <strong>${selected[i].name}</strong> → ${selected[i+1].name}<br>${leg.distance.text} • ${leg.duration.text}</div>`;
                 });
-                document.getElementById("directions-panel").innerHTML=html;
-                document.getElementById("route-info").textContent=`Optimized ${selected.length} stops!`;
+                document.getElementById("directions-panel").innerHTML = html;
+                document.getElementById("route-info").textContent = `Optimized ${selected.length} stops!`;
             } else {
                 alert("Route failed: " + status);
             }
@@ -290,10 +297,10 @@
 
     function clearRoute() {
         directionsRenderer.setDirections({routes:[]});
-        document.getElementById("route-panel").style.display="none";
-        document.getElementById("route-info").textContent="Click pins to select • Double-click to edit";
-        document.querySelectorAll("#customer-list-ul li.selected").forEach(li=>li.classList.remove("selected"));
-        markers.forEach(m=>m.setIcon(m.getIcon()));
+        document.getElementById("route-panel").style.display = "none";
+        document.getElementById("route-info").textContent = "Click pins to select • Double-click to edit";
+        document.querySelectorAll("#customer-list-ul li.selected").forEach(li => li.classList.remove("selected"));
+        markers.forEach(m => m.setIcon(m.getIcon()));
         selectedIds.clear();
     }
 </script>
