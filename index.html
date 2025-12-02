@@ -59,7 +59,6 @@
 
 <div id="map"></div>
 
-<!-- RIGHT SIDEBAR -->
 <div id="sidebar">
     <h2 style="margin-top:0; color:#007bff;">Sales Customer Map</h2>
     
@@ -118,7 +117,6 @@
     <input id="search" placeholder="Search by name..." onkeyup="searchCustomers()" disabled>
 </div>
 
-<!-- PIN LEGEND -->
 <div id="pin-legend">
     <h4>Pin Legend</h4>
     <div class="legend-item"><div class="legend-color" style="background:blue"></div>Hotlist</div>
@@ -131,13 +129,11 @@
     <div class="legend-item"><div class="legend-color" style="background:pink"></div>Overdue</div>
 </div>
 
-<!-- CUSTOMER LIST AT BOTTOM -->
 <div id="customer-list-container">
     <h3 style="text-align:center; margin-bottom:15px; color:#007bff;">Customer List</h3>
     <div id="customer-list"><ul id="customer-list-ul"></ul></div>
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
@@ -198,8 +194,10 @@
                 name: name.value || "Unnamed",
                 address: r.addr, lat: r.lat, lng: r.lng,
                 priority: priority.value,
-                contactName: contactName.value, phone: phone.value,
-                emailContact: emailContact.value, notes: notes.value,
+                contactName: contactName.value,
+                phone: phone.value,
+                emailContact: emailContact.value,
+                notes: notes.value,
                 lastVisit: lastVisit.value,
                 reminders: [...reminders.selectedOptions].map(o => o.value)
             });
@@ -209,9 +207,20 @@
 
     function editCustomer(id) {
         const c = window.customers.find(x => x.id === id);
-        ["name","address","contactName","phone","emailContact","notes","lastVisit"].forEach(f => document.getElementById(f).value = c[f]||"");
-        priority.value = c.priority;
-        [...reminders.options].forEach(o => o.selected = c.reminders?.includes(o.value));
+        if (!c) return;
+
+        // FIXED: was using wrong field name "address" instead of "addr"
+        document.getElementById("name").value = c.name || "";
+        document.getElementById("address").value = c.address || "";   // ← this is the fix
+        document.getElementById("priority").value = c.priority || "urgent";
+        document.getElementById("contactName").value = c.contactName || "";
+        document.getElementById("phone").value = c.phone || "";
+        document.getElementById("emailContact").value = c.emailContact || "";
+        document.getElementById("notes").value = c.notes || "";
+        document.getElementById("lastVisit").value = c.lastVisit || "";
+
+        [...reminders.options].forEach(o => o.selected = (c.reminders || []).includes(o.value));
+
         editingId = id;
         saveEditButton.style.display = "block";
         addCustomerButton.style.display = "none";
@@ -224,8 +233,10 @@
                 name: name.value || "Unnamed",
                 address: r.addr, lat: r.lat, lng: r.lng,
                 priority: priority.value,
-                contactName: contactName.value, phone: phone.value,
-                emailContact: emailContact.value, notes: notes.value,
+                contactName: contactName.value,
+                phone: phone.value,
+                emailContact: emailContact.value,
+                notes: notes.value,
                 lastVisit: lastVisit.value,
                 reminders: [...reminders.selectedOptions].map(o => o.value)
             });
@@ -280,21 +291,19 @@
             .filter(c => {
                 const overdue = isOverdue(c);
                 const matchFilter = filters.includes("all") || filters.includes(c.priority) || (filters.includes("overdue") && overdue);
-                const matchSearch = !searchTerm || c.name.toLowerCase().includes(searchTerm);
+                const matchSearch = !searchTerm || (c.name || "").toLowerCase().includes(searchTerm);
                 return matchFilter && matchSearch;
             })
-            .sort((a, b) => a.name.localeCompare(b.name));
+            .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
         filtered.forEach(c => {
-            // List item
             const li = document.createElement("li");
-            li.textContent = c.name;
+            li.textContent = c.name || "Unnamed";
             li.className = isOverdue(c) ? "priority-overdue" : `priority-${c.priority}`;
             li.onclick = () => {
                 map.setCenter({lat: c.lat, lng: c.lng});
                 map.setZoom(16);
             };
-1
             document.getElementById("customer-list-ul").appendChild(li);
 
             if (!c.lat || !c.lng) return;
@@ -306,14 +315,14 @@
             const marker = new google.maps.Marker({
                 position: {lat: c.lat, lng: c.lng},
                 map: map,
-                title: c.name,
+                title: c.name || "Unnamed",
                 icon: `http://maps.google.com/mapfiles/ms/icons/${color}-dot.png`
             });
 
             const info = new google.maps.InfoWindow({
                 content: `<div style="font-size:14px;">
-                    <h3>${c.name}</h3>
-                    <p><strong>Address:</strong> ${c.address}</p>
+                    <h3>${c.name || "Unnamed"}</h3>
+                    <p><strong>Address:</strong> ${c.address || "N/A"}</p>
                     <p><strong>Contact:</strong> ${c.contactName || "N/A"}</p>
                     <p><strong>Phone:</strong> ${c.phone || "N/A"}</p>
                     <button onclick="editCustomer('${c.id}')" style="margin:5px;padding:6px 10px;">Edit</button>
