@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sales Map - Clean & Perfect</title>
+    <title>Sales Map - Perfect & Final</title>
     <style>
         body { margin:0; font-family:Arial,sans-serif; background:#f4f6f9; }
         #map { height:100vh; width:100%; }
@@ -191,7 +191,7 @@
         geocode(address.value, r => {
             if (!r) return alert("Invalid address");
             db.push({
-                name: name.value || "Unnamed",
+                name: name.value.trim() || "Unnamed Customer",
                 address: r.addr, lat: r.lat, lng: r.lng,
                 priority: priority.value,
                 contactName: contactName.value,
@@ -209,9 +209,8 @@
         const c = window.customers.find(x => x.id === id);
         if (!c) return;
 
-        // FIXED: was using wrong field name "address" instead of "addr"
-        document.getElementById("name").value = c.name || "";
-        document.getElementById("address").value = c.address || "";   // ← this is the fix
+        document.getElementById("name").value = c.name || "Unnamed Customer";
+        document.getElementById("address").value = c.address || "";
         document.getElementById("priority").value = c.priority || "urgent";
         document.getElementById("contactName").value = c.contactName || "";
         document.getElementById("phone").value = c.phone || "";
@@ -230,7 +229,7 @@
         geocode(address.value, r => {
             if (!r) return alert("Invalid address");
             db.child(editingId).set({
-                name: name.value || "Unnamed",
+                name: name.value.trim() || "Unnamed Customer",
                 address: r.addr, lat: r.lat, lng: r.lng,
                 priority: priority.value,
                 contactName: contactName.value,
@@ -298,7 +297,7 @@
 
         filtered.forEach(c => {
             const li = document.createElement("li");
-            li.textContent = c.name || "Unnamed";
+            li.textContent = c.name || "Unnamed Customer";
             li.className = isOverdue(c) ? "priority-overdue" : `priority-${c.priority}`;
             li.onclick = () => {
                 map.setCenter({lat: c.lat, lng: c.lng});
@@ -315,13 +314,13 @@
             const marker = new google.maps.Marker({
                 position: {lat: c.lat, lng: c.lng},
                 map: map,
-                title: c.name || "Unnamed",
+                title: c.name || "Unnamed Customer",
                 icon: `http://maps.google.com/mapfiles/ms/icons/${color}-dot.png`
             });
 
             const info = new google.maps.InfoWindow({
                 content: `<div style="font-size:14px;">
-                    <h3>${c.name || "Unnamed"}</h3>
+                    <h3>${c.name || "Unnamed Customer"}</h3>
                     <p><strong>Address:</strong> ${c.address || "N/A"}</p>
                     <p><strong>Contact:</strong> ${c.contactName || "N/A"}</p>
                     <p><strong>Phone:</strong> ${c.phone || "N/A"}</p>
