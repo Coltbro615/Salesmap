@@ -2,344 +2,468 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sales Map - Perfect & Final</title>
+    <title>Sales Map</title>
     <style>
-        body { margin:0; font-family:Arial,sans-serif; background:#f4f6f9; }
-        #map { height:100vh; width:100%; }
-        #sidebar {
-            position:fixed; right:0; top:0; width:380px; height:100%;
-            background:#fff; padding:20px; overflow-y:auto;
-            box-shadow:-5px 0 20px rgba(0,0,0,0.2); z-index:10;
+        body { margin: 0; font-family: Arial, sans-serif; height: auto; }
+        #main-container { display: flex; }
+        #map {
+            height: 100vh;
+            min-height: 100vh;
+            width: 70%;
+            min-width: 70%;
+            position: relative;
+            display: block;
         }
-        input, select, textarea, button {
-            width:100%; margin:8px 0; padding:12px; border-radius:6px;
-            border:1px solid #ccc; font-size:15px; box-sizing:border-box;
-        }
-        button {
-            background:#007bff; color:white; border:none; cursor:pointer;
-            font-weight:bold; transition:0.2s;
-        }
-        button:hover { background:#0056b3; }
-        #addCustomerButton { background:#28a745 !important; }
-        #saveEditButton { background:#17a2b8 !important; display:none; }
-        h2, h3 { margin-top:20px; color:#333; }
+        #sidebar { height: 100vh; width: 30%; padding: 10px; background: #f0f0f0; overflow-y: auto; }
+        #customer-list-container { width: 100%; background: #f0f0f0; padding: 10px; }
+        #customer-list { height: 400px; overflow-y: auto; }
+        #customer-list ul { list-style: none; padding: 0; margin: 0; }
+        #customer-list li { padding: 5px; cursor: pointer; }
+        #customer-list li:hover { background: #ddd; }
+        input, textarea, select { width: 100%; margin: 5px 0; }
+        button { margin: 5px 0; }
         #pin-legend {
-            position:fixed; bottom:20px; left:20px; background:white;
-            padding:15px; border-radius:10px; box-shadow:0 6px 25px rgba(0,0,0,0.4);
-            z-index:1000; font-size:14px;
+            position: absolute;
+            bottom: 50px;
+            left: 20px;
+            background: white;
+            padding: 10px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            z-index: 1001;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-        .legend-item { display:flex; align-items:center; margin:8px 0; font-weight:600; }
-        .legend-color { width:20px; height:20px; border-radius:50%; margin-right:12px; border:3px solid #444; }
-        #customer-list-container {
-            background:white; padding:30px; margin:60px auto 0;
-            width:90%; max-width:900px; border-radius:12px;
-            box-shadow:0 10px 40px rgba(0,0,0,0.2);
-        }
-        #customer-list ul {
-            list-style:none; padding:0; margin:0;
-            max-height:400px; overflow-y:auto;
-            border:1px solid #ddd; border-radius:8px;
-        }
-        #customer-list li {
-            padding:14px 18px; border-bottom:1px solid #eee;
-            cursor:pointer; transition:0.2s; font-weight:500;
-        }
-        #customer-list li:hover { background:#e3f2fd; }
-        .priority-urgent { color:#0066ff; font-weight:bold; }
-        .priority-high { color:#28a745; font-weight:bold; }
-        .priority-medium { color:#ffc107; font-weight:bold; }
-        .priority-low { color:#dc3545; font-weight:bold; }
-        .priority-never { color:#fd7e14; font-weight:bold; }
-        .priority-no { color:#6f42c1; font-weight:bold; }
-        .priority-ucc { color:#8B00FF; font-weight:bold; }
-        .priority-overdue { color:#ff69b4; font-weight:bold; }
+        .legend-item { display: flex; align-items: center; margin: 5px 0; }
+        .legend-color { width: 20px; height: 20px; margin-right: 5px; }
+        #auth-container { margin-bottom: 10px; }
+        #filter { height: 100px; }
+        #notes-section textarea { height: 100px; }
+        .priority-urgent { color: blue; }
+        .priority-high { color: green; }
+        .priority-medium { color: #d4a017; }
+        .priority-low { color: red; }
+        .priority-never { color: orange; }
+        .priority-no { color: purple; }
+        .priority-ucc { color: #8B00FF; font-weight: bold; }
+        .priority-overdue { color: pink; }
     </style>
 </head>
 <body>
-
-<div id="map"></div>
-
-<div id="sidebar">
-    <h2 style="margin-top:0; color:#007bff;">Sales Customer Map</h2>
-    
-    <input id="email" type="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
-    <button onclick="signIn()">Sign In</button>
-    <button onclick="signOut()" id="signOutButton" style="display:none">Sign Out</button>
-    <p id="auth-status">Not signed in</p>
-
-    <h3>Add New Customer</h3>
-    <input id="name" placeholder="Customer Name" disabled>
-    <input id="address" placeholder="Full Address (for pin)" disabled>
-    <select id="priority" disabled>
-        <option value="urgent">Hotlist (Blue)</option>
-        <option value="high">High Priority (Green)</option>
-        <option value="medium">Medium Priority (Yellow)</option>
-        <option value="low">Low Priority (Red)</option>
-        <option value="never">New Visit (Orange)</option>
-        <option value="no">No Visit (Purple)</option>
-        <option value="ucc">UCC (Bright Violet)</option>
-    </select>
-
-    <input id="contactName" placeholder="Contact Name" disabled>
-    <input id="phone" placeholder="Phone" disabled>
-    <input id="emailContact" placeholder="Email" disabled>
-    <textarea id="notes" placeholder="Notes" disabled></textarea>
-    <input id="lastVisit" type="date" disabled>
-    
-    <select id="reminders" multiple disabled style="height:100px;">
-        <option value="never">Never</option>
-        <option value="1 month">1 Month</option>
-        <option value="2 months">2 Months</option>
-        <option value="3 months">3 Months</option>
-        <option value="4 months">4 Months</option>
-        <option value="6 months">6 Months</option>
-        <option value="12 months">12 Months</option>
-    </select>
-
-    <button id="addCustomerButton" onclick="addCustomer()" disabled>Add Customer</button>
-    <button id="saveEditButton" onclick="saveEditedCustomer()" disabled>Save Changes</button>
-
-    <h3>Filter</h3>
-    <select id="filter" multiple size="8" onchange="applyFilter()" disabled>
-        <option value="all" selected>All Customers</option>
-        <option value="urgent">Hotlist</option>
-        <option value="high">High</option>
-        <option value="medium">Medium</option>
-        <option value="low">Low</option>
-        <option value="never">New Visit</option>
-        <option value="no">No Visit</option>
-        <option value="ucc">UCC</option>
-        <option value="overdue">Overdue</option>
-    </select>
-
-    <h3>Search</h3>
-    <input id="search" placeholder="Search by name..." onkeyup="searchCustomers()" disabled>
-</div>
-
-<div id="pin-legend">
-    <h4>Pin Legend</h4>
-    <div class="legend-item"><div class="legend-color" style="background:blue"></div>Hotlist</div>
-    <div class="legend-item"><div class="legend-color" style="background:green"></div>High Priority</div>
-    <div class="legend-item"><div class="legend-color" style="background:yellow"></div>Medium Priority</div>
-    <div class="legend-item"><div class="legend-color" style="background:red"></div>Low Priority</div>
-    <div class="legend-item"><div class="legend-color" style="background:orange"></div>New Visit</div>
-    <div class="legend-item"><div class="legend-color" style="background:purple"></div>No Visit</div>
-    <div class="legend-item"><div class="legend-color" style="background:#8B00FF"></div>UCC (Bright Violet)</div>
-    <div class="legend-item"><div class="legend-color" style="background:pink"></div>Overdue</div>
-</div>
-
-<div id="customer-list-container">
-    <h3 style="text-align:center; margin-bottom:15px; color:#007bff;">Customer List</h3>
-    <div id="customer-list"><ul id="customer-list-ul"></ul></div>
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-
-<script>
-    firebase.initializeApp({
-        apiKey: "AIzaSyA1aUdvuhzMqJAKGNy0ttDVS-QZNib30ZY",
-        authDomain: "sales-map-ac968.firebaseapp.com",
-        databaseURL: "https://sales-map-ac968-default-rtdb.firebaseio.com",
-        projectId: "sales-map-ac968",
-        storageBucket: "sales-map-ac968.firebasestorage.app",
-        messagingSenderId: "758371444111",
-        appId: "1:758371444111:web:a5f0f425522e1bf536d7fa"
-    });
-
-    const db = firebase.database().ref("customers");
-    let map, markers = [], currentInfoWindow, editingId = null;
-
-    firebase.auth().onAuthStateChanged(user => {
-        const disabled = !user;
-        document.querySelectorAll("input,select,textarea,button").forEach(el => el.disabled = disabled);
-        document.getElementById("auth-status").textContent = user ? `Signed in as ${user.email}` : "Not signed in";
-        document.getElementById("signOutButton").style.display = user ? "block" : "none";
-        if (user) loadCustomers();
-        else { window.customers = []; initMap(); }
-    });
-
-    function signIn() {
-        firebase.auth().signInWithEmailAndPassword(email.value, password.value)
-            .catch(e => alert(e.message));
-    }
-
-    function signOut() { firebase.auth().signOut(); }
-
-    function loadCustomers() {
-        db.on("value", snap => {
-            window.customers = snap.val() ? Object.entries(snap.val()).map(([id, v]) => ({id, ...v})) : [];
-            initMap(getFilters());
+    <div id="main-container">
+        <div id="map"></div>
+        <div id="sidebar">
+            <div id="auth-container">
+                <input id="email" type="email" placeholder="Email">
+                <input id="password" type="password" placeholder="Password">
+                <button onclick="signIn()">Sign In</button>
+                <button onclick="signOut()" id="signOutButton" style="display: none;">Sign Out</button>
+                <p id="auth-status">Not signed in</p>
+            </div>
+            <h2>Add/Edit Customer</h2>
+            <input id="name" placeholder="Customer Name" disabled>
+            <input id="address" placeholder="Customer Address" disabled>
+            <select id="priority" disabled>
+                <option value="urgent">Hotlist (Blue)</option>
+                <option value="high">High Priority (Green)</option>
+                <option value="medium">Medium Priority (Yellow)</option>
+                <option value="low">Low Priority (Red)</option>
+                <option value="never">New Visit (Orange)</option>
+                <option value="no">No Visit (Purple)</option>
+                <option value="ucc">UCC (Violet)</option>
+            </select>
+            <div id="notes-section">
+                <input id="contactName" placeholder="Contact Name" disabled>
+                <input id="phone" type="tel" placeholder="Phone Number" disabled>
+                <input id="emailContact" type="email" placeholder="Email Address" disabled>
+                <textarea id="notes" placeholder="Additional Notes" disabled></textarea>
+            </div>
+            <input id="lastVisit" type="date" disabled>
+            <select id="reminders" multiple disabled>
+                <option value="never">Never</option>
+                <option value="1 month">1 Month</option>
+                <option value="2 months">2 Months</option>
+                <option value="3 months">3 Months</option>
+                <option value="4 months">4 Months</option>
+                <option value="6 months">6 Months</option>
+                <option value="12 months">12 Months</option>
+            </select>
+            <button id="addCustomerButton" onclick="addCustomer()" disabled>Add Customer</button>
+            <button id="saveEditButton" onclick="saveEditedCustomer()" style="display: none;" disabled>Save Changes</button>
+            <h3>Filter by Priority</h3>
+            <select id="filter" multiple onchange="applyFilter()" disabled>
+                <option value="all">All</option>
+                <option value="urgent">Hotlist (Blue)</option>
+                <option value="high">High (Green)</option>
+                <option value="medium">Medium (Yellow)</option>
+                <option value="low">Low (Red)</option>
+                <option value="never">New Visit (Orange)</option>
+                <option value="no">No Visit (Purple)</option>
+                <option value="ucc">UCC (Violet)</option>
+                <option value="overdue">Overdue (Pink)</option>
+            </select>
+            <h3>Search Customer</h3>
+            <input id="search" placeholder="Search by name" disabled onkeyup="searchCustomers()">
+        </div>
+    </div>
+    <div id="customer-list-container">
+        <h3>Customer List</h3>
+        <div id="customer-list">
+            <ul id="customer-list-ul"></ul>
+        </div>
+    </div>
+    <div id="pin-legend">
+        <h4>Pin Color Legend</h4>
+        <div class="legend-item"><div class="legend-color" style="background-color: blue;"></div>Hotlist</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: green;"></div>High Priority</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: yellow;"></div>Medium Priority</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: red;"></div>Low Priority</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: orange;"></div>New Visit</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: purple;"></div>No Visit</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: #8B00FF;"></div>UCC</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: pink;"></div>Overdue</div>
+    </div>
+    <!-- Firebase Compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyA1aUdvuhzMqJAKGNy0ttDVS-QZNib30ZY",
+            authDomain: "sales-map-ac968.firebaseapp.com",
+            databaseURL: "https://sales-map-ac968-default-rtdb.firebaseio.com",
+            projectId: "sales-map-ac968",
+            storageBucket: "sales-map-ac968.firebasestorage.app",
+            messagingSenderId: "758371444111",
+            appId: "1:758371444111:web:a5f0f425522e1bf536d7fa"
+        };
+        try {
+            firebase.initializeApp(firebaseConfig);
+            console.log("Firebase initialized successfully");
+        } catch (error) {
+            console.error("Firebase initialization failed:", error);
+            alert("Firebase setup failed. Check console.");
+        }
+        const db = firebase.database();
+        const customersRef = db.ref("customers");
+        window.customers = [];
+        let editingId = null;
+        const today = new Date();
+        let geocoder;
+        let currentInfoWindow = null;
+        let map = null;
+        let markers = [];
+        firebase.auth().onAuthStateChanged((user) => {
+            const authStatus = document.getElementById("auth-status");
+            const signOutButton = document.getElementById("signOutButton");
+            const customerInputs = document.querySelectorAll("#name, #address, #priority, #contactName, #phone, #emailContact, #notes, #lastVisit, #reminders, #addCustomerButton, #saveEditButton, #filter, #search");
+            if (user) {
+                authStatus.textContent = `Signed in as ${user.email}`;
+                signOutButton.style.display = "block";
+                customerInputs.forEach(input => input.disabled = false);
+                console.log("User signed in:", user.uid);
+                loadCustomers();
+            } else {
+                authStatus.textContent = "Not signed in";
+                signOutButton.style.display = "none";
+                customerInputs.forEach(input => input.disabled = true);
+                window.customers = [];
+                console.log("User signed out");
+                initMap();
+            }
         });
-    }
-
-    function geocode(addr, cb) {
-        new google.maps.Geocoder().geocode({address: addr}, (res, status) => {
-            if (status === "OK") {
-                cb({
-                    lat: res[0].geometry.location.lat(),
-                    lng: res[0].geometry.location.lng(),
-                    addr: res[0].formatted_address
+        function signIn() {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            firebase.auth().signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    console.log("Signed in successfully:", userCredential.user.email);
+                })
+                .catch(error => {
+                    console.error("Sign-in failed:", error);
+                    alert("Sign-in failed: " + error.message);
                 });
-            } else cb(null);
-        });
-    }
-
-    function addCustomer() {
-        geocode(address.value, r => {
-            if (!r) return alert("Invalid address");
-            db.push({
-                name: name.value.trim() || "Unnamed Customer",
-                address: r.addr, lat: r.lat, lng: r.lng,
-                priority: priority.value,
-                contactName: contactName.value,
-                phone: phone.value,
-                emailContact: emailContact.value,
-                notes: notes.value,
-                lastVisit: lastVisit.value,
-                reminders: [...reminders.selectedOptions].map(o => o.value)
-            });
-            clearForm();
-        });
-    }
-
-    function editCustomer(id) {
-        const c = window.customers.find(x => x.id === id);
-        if (!c) return;
-
-        document.getElementById("name").value = c.name || "Unnamed Customer";
-        document.getElementById("address").value = c.address || "";
-        document.getElementById("priority").value = c.priority || "urgent";
-        document.getElementById("contactName").value = c.contactName || "";
-        document.getElementById("phone").value = c.phone || "";
-        document.getElementById("emailContact").value = c.emailContact || "";
-        document.getElementById("notes").value = c.notes || "";
-        document.getElementById("lastVisit").value = c.lastVisit || "";
-
-        [...reminders.options].forEach(o => o.selected = (c.reminders || []).includes(o.value));
-
-        editingId = id;
-        saveEditButton.style.display = "block";
-        addCustomerButton.style.display = "none";
-    }
-
-    function saveEditedCustomer() {
-        geocode(address.value, r => {
-            if (!r) return alert("Invalid address");
-            db.child(editingId).set({
-                name: name.value.trim() || "Unnamed Customer",
-                address: r.addr, lat: r.lat, lng: r.lng,
-                priority: priority.value,
-                contactName: contactName.value,
-                phone: phone.value,
-                emailContact: emailContact.value,
-                notes: notes.value,
-                lastVisit: lastVisit.value,
-                reminders: [...reminders.selectedOptions].map(o => o.value)
-            });
-            clearForm();
-            editingId = null;
-            saveEditButton.style.display = "none";
-            addCustomerButton.style.display = "block";
-        });
-    }
-
-    function deleteCustomer(id) {
-        if (confirm("Delete this customer?")) db.child(id).remove();
-    }
-
-    function clearForm() {
-        document.querySelectorAll("#name,#address,#contactName,#phone,#emailContact,#notes,#lastVisit").forEach(i => i.value = "");
-        priority.value = "urgent";
-        [...reminders.options].forEach(o => o.selected = false);
-    }
-
-    function isOverdue(c) {
-        if (!c.lastVisit || !c.reminders || c.reminders.includes("never")) return false;
-        return c.reminders.some(r => {
-            const m = parseInt(r);
-            if (!m) return false;
-            const d = new Date(c.lastVisit);
-            d.setMonth(d.getMonth() + m);
-            return d < new Date();
-        });
-    }
-
-    function getFilters() {
-        return [...filter.selectedOptions].map(o => o.value);
-    }
-
-    function applyFilter() { initMap(getFilters()); }
-    function searchCustomers() { initMap(getFilters(), search.value.toLowerCase()); }
-
-    function initMap(filters = ["all"], searchTerm = "") {
-        if (!map) {
-            map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 7,
-                center: { lat: 35.7796, lng: -78.6382 }
+        }
+        function signOut() {
+            firebase.auth().signOut()
+                .then(() => console.log("Signed out successfully"))
+                .catch(error => console.error("Sign-out failed:", error));
+        }
+        function loadCustomers() {
+            if (customersRef) {
+                customersRef.on("value", (snapshot) => {
+                    const data = snapshot.val();
+                    window.customers = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })) : [];
+                    console.log("Customers loaded:", window.customers.length, "customers");
+                    console.log("Customer details:", window.customers.map(c => ({
+                        name: c.name,
+                        overdue: isOverdue(c),
+                        lat: c.lat,
+                        lng: c.lng,
+                        priority: c.priority
+                    })));
+                    initMap(getSelectedFilters());
+                }, (error) => {
+                    console.error("Error loading customers:", error);
+                    alert("Failed to load data: " + error.message);
+                });
+            }
+        }
+        function geocodeAddress(address, callback) {
+            if (!geocoder) geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ 'address': address }, (results, status) => {
+                if (status === 'OK' && results[0]) {
+                    const location = results[0].geometry.location;
+                    callback({
+                        lat: location.lat(),
+                        lng: location.lng(),
+                        formattedAddress: results[0].formatted_address
+                    });
+                } else {
+                    console.error('Geocode failed: ' + status);
+                    alert('Geocode failed: ' + status);
+                    callback(null);
+                }
             });
         }
-
-        markers.forEach(m => m.setMap(null));
-        markers = [];
-        document.getElementById("customer-list-ul").innerHTML = "";
-
-        const filtered = window.customers
-            .filter(c => {
-                const overdue = isOverdue(c);
-                const matchFilter = filters.includes("all") || filters.includes(c.priority) || (filters.includes("overdue") && overdue);
-                const matchSearch = !searchTerm || (c.name || "").toLowerCase().includes(searchTerm);
-                return matchFilter && matchSearch;
-            })
-            .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-
-        filtered.forEach(c => {
-            const li = document.createElement("li");
-            li.textContent = c.name || "Unnamed Customer";
-            li.className = isOverdue(c) ? "priority-overdue" : `priority-${c.priority}`;
-            li.onclick = () => {
-                map.setCenter({lat: c.lat, lng: c.lng});
-                map.setZoom(16);
-            };
-            document.getElementById("customer-list-ul").appendChild(li);
-
-            if (!c.lat || !c.lng) return;
-
-            const color = isOverdue(c) ? "pink" :
-                c.priority === "ucc" ? "purple" :
-                {urgent:"blue",high:"green",medium:"yellow",low:"red",never:"orange",no:"purple"}[c.priority] || "gray";
-
-            const marker = new google.maps.Marker({
-                position: {lat: c.lat, lng: c.lng},
-                map: map,
-                title: c.name || "Unnamed Customer",
-                icon: `http://maps.google.com/mapfiles/ms/icons/${color}-dot.png`
+        function addCustomer() {
+            const address = document.getElementById("address").value;
+            geocodeAddress(address, (result) => {
+                if (result) {
+                    const newCustomer = {
+                        lat: result.lat,
+                        lng: result.lng,
+                        address: result.formattedAddress,
+                        name: document.getElementById("name").value || "Unnamed",
+                        priority: document.getElementById("priority").value || "urgent",
+                        contactName: document.getElementById("contactName").value || "",
+                        phone: document.getElementById("phone").value || "",
+                        emailContact: document.getElementById("emailContact").value || "",
+                        notes: document.getElementById("notes").value || "",
+                        lastVisit: document.getElementById("lastVisit").value || "",
+                        reminders: Array.from(document.getElementById("reminders").selectedOptions || []).map(option => option.value)
+                    };
+                    console.log("Adding customer:", newCustomer);
+                    customersRef.push(newCustomer);
+                    clearForm();
+                }
             });
-
-            const info = new google.maps.InfoWindow({
-                content: `<div style="font-size:14px;">
-                    <h3>${c.name || "Unnamed Customer"}</h3>
-                    <p><strong>Address:</strong> ${c.address || "N/A"}</p>
-                    <p><strong>Contact:</strong> ${c.contactName || "N/A"}</p>
-                    <p><strong>Phone:</strong> ${c.phone || "N/A"}</p>
-                    <button onclick="editCustomer('${c.id}')" style="margin:5px;padding:6px 10px;">Edit</button>
-                    <button onclick="deleteCustomer('${c.id}')" style="margin:5px;padding:6px 10px;background:#dc3545;">Delete</button>
-                </div>`
+        }
+        function editCustomer(id) {
+            const customer = window.customers.find(c => c.id === id);
+            if (!customer) return;
+            document.getElementById("name").value = customer.name;
+            document.getElementById("address").value = customer.address;
+            document.getElementById("priority").value = customer.priority;
+            document.getElementById("contactName").value = customer.contactName || "";
+            document.getElementById("phone").value = customer.phone || "";
+            document.getElementById("emailContact").value = customer.emailContact || "";
+            document.getElementById("notes").value = customer.notes || "";
+            document.getElementById("lastVisit").value = customer.lastVisit;
+            const remindersSelect = document.getElementById("reminders");
+            Array.from(remindersSelect.options).forEach(option => {
+                option.selected = customer.reminders.includes(option.value);
             });
-
-            marker.addListener("click", () => {
-                if (currentInfoWindow) currentInfoWindow.close();
-                info.open(map, marker);
-                currentInfoWindow = info;
+            editingId = id;
+            document.getElementById("saveEditButton").style.display = "block";
+            document.getElementById("addCustomerButton").style.display = "none";
+        }
+        function saveEditedCustomer() {
+            if (editingId !== null) {
+                const address = document.getElementById("address").value;
+                geocodeAddress(address, (result) => {
+                    if (result) {
+                        const updatedCustomer = {
+                            lat: result.lat,
+                            lng: result.lng,
+                            address: result.formattedAddress,
+                            name: document.getElementById("name").value || "Unnamed",
+                            priority: document.getElementById("priority").value || "urgent",
+                            contactName: document.getElementById("contactName").value || "",
+                            phone: document.getElementById("phone").value || "",
+                            emailContact: document.getElementById("emailContact").value || "",
+                            notes: document.getElementById("notes").value || "",
+                            lastVisit: document.getElementById("lastVisit").value || "",
+                            reminders: Array.from(document.getElementById("reminders").selectedOptions || []).map(option => option.value)
+                        };
+                        console.log("Edited customer:", updatedCustomer);
+                        customersRef.child(editingId).set(updatedCustomer);
+                        clearForm();
+                        editingId = null;
+                        document.getElementById("saveEditButton").style.display = "none";
+                        document.getElementById("addCustomerButton").style.display = "block";
+                    }
+                });
+            }
+        }
+        function deleteCustomer(id) {
+            if (confirm("Are you sure you want to delete this customer?")) {
+                customersRef.child(id).remove();
+            }
+        }
+        function clearForm() {
+            document.getElementById("name").value = "";
+            document.getElementById("address").value = "";
+            document.getElementById("priority").value = "urgent";
+            document.getElementById("contactName").value = "";
+            document.getElementById("phone").value = "";
+            document.getElementById("emailContact").value = "";
+            document.getElementById("notes").value = "";
+            document.getElementById("lastVisit").value = "";
+            document.getElementById("reminders").selectedIndex = -1;
+            document.getElementById("search").value = "";
+        }
+        function isOverdue(customer) {
+            if (!customer.lastVisit || !customer.reminders || customer.reminders.length === 0 || customer.reminders.includes("never")) return false;
+            const lastVisitDate = new Date(customer.lastVisit);
+            if (isNaN(lastVisitDate.getTime())) return false;
+            return customer.reminders.some(reminder => {
+                if (reminder === "never") return false;
+                const months = parseInt(reminder.split(" ")[0]);
+                const reminderDate = new Date(lastVisitDate);
+                reminderDate.setMonth(lastVisitDate.getMonth() + months);
+                return reminderDate < today;
             });
-
-            markers.push(marker);
+        }
+        function getSelectedFilters() {
+            const select = document.getElementById("filter");
+            return Array.from(select.selectedOptions).map(option => option.value);
+        }
+        function applyFilter() {
+            const filters = getSelectedFilters();
+            initMap(filters);
+        }
+        function searchCustomers() {
+            const searchValue = document.getElementById("search").value.toLowerCase();
+            initMap(getSelectedFilters(), searchValue);
+        }
+        function initMap(filters = ["all"], search = "") {
+            console.log("Initializing map...");
+            const mapDiv = document.getElementById("map");
+            if (!mapDiv) {
+                console.error("Map container not found!");
+                alert("Map container not found. Please check the HTML.");
+                return;
+            }
+            console.log("Map div dimensions:", mapDiv.offsetWidth, mapDiv.offsetHeight);
+            if (!map) {
+                try {
+                    map = new google.maps.Map(mapDiv, {
+                        zoom: 7,
+                        center: { lat: 35.7796, lng: -78.6382 }
+                    });
+                    console.log("Map initialized successfully");
+                } catch (error) {
+                    console.error("Failed to initialize map:", error);
+                    alert("Failed to initialize map. Check console for details.");
+                    return;
+                }
+            }
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+            const filteredCustomers = window.customers.filter(customer => {
+                const isOverdueCustomer = isOverdue(customer);
+                const matchesFilter = filters.includes("all") ||
+                    filters.includes(customer.priority) ||
+                    (filters.includes("overdue") && isOverdueCustomer);
+                const matchesSearch = !search || customer.name.toLowerCase().includes(search);
+                return matchesFilter && matchesSearch;
+            });
+            console.log("Total customers:", window.customers.length);
+            console.log("Filtered customers:", filteredCustomers.length);
+            console.log("Overdue customers:", filteredCustomers.filter(c => isOverdue(c)).length);
+            const customerListUl = document.getElementById("customer-list-ul");
+            customerListUl.innerHTML = "";
+            filteredCustomers.sort((a, b) => a.name.localeCompare(b.name)).forEach(customer => {
+                const li = document.createElement("li");
+                li.textContent = customer.name;
+                li.className = `priority-${isOverdue(customer) ? "overdue" : customer.priority}`;
+                li.onclick = () => {
+                    map.setCenter({ lat: customer.lat, lng: customer.lng });
+                    map.setZoom(15);
+                    const marker = markers.find(m => m.customerId === customer.id);
+                    if (marker) {
+                        if (currentInfoWindow) currentInfoWindow.close();
+                        marker.infoWindow.open(map, marker);
+                        currentInfoWindow = marker.infoWindow;
+                    }
+                };
+                customerListUl.appendChild(li);
+            });
+            let markerCount = 0;
+            filteredCustomers.forEach((customer) => {
+                if (!customer.lat || !customer.lng || isNaN(customer.lat) || isNaN(customer.lng)) {
+                    console.warn(`Invalid coordinates for customer ${customer.name}:`, { lat: customer.lat, lng: customer.lng });
+                    return;
+                }
+                let pinColor;
+                if (isOverdue(customer)) {
+                    pinColor = "pink";
+                    console.log("Using pink icon for overdue customer:", customer.name);
+                } else {
+                    switch (customer.priority) {
+                        case "urgent": pinColor = "blue"; break;
+                        case "high": pinColor = "green"; break;
+                        case "medium": pinColor = "yellow"; break;
+                        case "low": pinColor = "red"; break;
+                        case "never": pinColor = "orange"; break;
+                        case "no": pinColor = "purple"; break;
+                        case "ucc": pinColor = "purple"; break;
+                        default: pinColor = "purple";
+                    }
+                }
+                try {
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: `
+                            <h3>${customer.name}</h3>
+                            <p>Address: ${customer.address}</p>
+                            <p>Priority: ${customer.priority}</p>
+                            <p>Contact Name: ${customer.contactName || 'N/A'}</p>
+                            <p>Phone: ${customer.phone || 'N/A'}</p>
+                            <p>Email: ${customer.emailContact || 'N/A'}</p>
+                            <p>Notes: ${customer.notes || 'N/A'}</p>
+                            <p>Last Visit: ${customer.lastVisit || 'N/A'}</p>
+                            <p>Reminders: ${Array.isArray(customer.reminders) ? customer.reminders.join(", ") : "None"}</p>
+                            <button onclick="editCustomer('${customer.id}')">Edit</button>
+                            <button onclick="deleteCustomer('${customer.id}')">Delete</button>
+                        `
+                    });
+                    const marker = new google.maps.Marker({
+                        position: { lat: customer.lat, lng: customer.lng },
+                        map: map,
+                        title: customer.name,
+                        icon: { url: `http://maps.google.com/mapfiles/ms/icons/${pinColor}-dot.png` },
+                        customerId: customer.id
+                    });
+                    marker.infoWindow = infoWindow;
+                    marker.addListener("click", () => {
+                        if (currentInfoWindow) currentInfoWindow.close();
+                        infoWindow.open(map, marker);
+                        currentInfoWindow = infoWindow;
+                    });
+                    markers.push(marker);
+                    markerCount++;
+                    console.log(`Marker created for ${customer.name}: ${pinColor}, lat: ${customer.lat}, lng: ${customer.lng}`);
+                } catch (error) {
+                    console.error(`Failed to create marker for ${customer.name}:`, error);
+                }
+            });
+            console.log("Total markers created:", markerCount);
+        }
+        // Handle Google Maps API load errors
+        window.addEventListener('error', (event) => {
+            if (event.target.src && event.target.src.includes('maps.googleapis.com')) {
+                console.error("Google Maps API failed to load:", event);
+                alert("Failed to load Google Maps API. Check your API key or network connection.");
+            }
         });
-    }
-</script>
-
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAk5eJEWBbPMOJjybLkJvQ9vJgvFw87030&callback=initMap" async defer></script>
+        // Ensure map resizes correctly
+        window.addEventListener('resize', () => {
+            if (map) {
+                google.maps.event.trigger(map, 'resize');
+                console.log("Map resized");
+            }
+        });
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAk5eJEWBbPMOJjybLkJvQ9vJgvFw87030&callback=initMap" async defer></script>
 </body>
 </html>
