@@ -44,7 +44,7 @@
         .priority-low { color: red; }
         .priority-never { color: orange; }
         .priority-no { color: purple; }
-        .priority-ucc { color: #8B00FF; font-weight: bold; }
+        .priority-ucc { color: #00BFFF; font-weight: bold; } /* Updated to match ltblue */
         .priority-overdue { color: pink; }
     </style>
 </head>
@@ -69,7 +69,7 @@
                 <option value="low">Low Priority (Red)</option>
                 <option value="never">New Visit (Orange)</option>
                 <option value="no">No Visit (Purple)</option>
-                <option value="ucc">UCC (Violet)</option>
+                <option value="ucc">UCC (Light Blue)</option>
             </select>
             <div id="notes-section">
                 <input id="contactName" placeholder="Contact Name" disabled>
@@ -100,7 +100,7 @@
                 <option value="low">Low (Red)</option>
                 <option value="never">New Visit (Orange)</option>
                 <option value="no">No Visit (Purple)</option>
-                <option value="ucc">UCC (Violet)</option>
+                <option value="ucc">UCC (Light Blue)</option>
                 <option value="overdue">Overdue (Pink)</option>
             </select>
             <h3>Search Customer</h3>
@@ -121,7 +121,7 @@
         <div class="legend-item"><div class="legend-color" style="background-color: red;"></div>Low Priority</div>
         <div class="legend-item"><div class="legend-color" style="background-color: orange;"></div>New Visit</div>
         <div class="legend-item"><div class="legend-color" style="background-color: purple;"></div>No Visit</div>
-        <div class="legend-item"><div class="legend-color" style="background-color: #8B00FF;"></div>UCC</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: #ADD8E6;"></div>UCC (Light Blue)</div>
         <div class="legend-item"><div class="legend-color" style="background-color: pink;"></div>Overdue</div>
     </div>
 
@@ -240,8 +240,8 @@
             geocodeAddress(address, (result) => {
                 if (result) {
                     const newCustomer = {
-                        lat: result.lat,
-                        lng: result.lng,
+                        lat: Number(result.lat),
+                        lng: Number(result.lng),
                         address: result.formattedAddress,
                         name: nameVal,
                         priority: document.getElementById("priority").value || "urgent",
@@ -297,8 +297,8 @@
             geocodeAddress(address, (result) => {
                 if (result) {
                     const updatedCustomer = {
-                        lat: result.lat,
-                        lng: result.lng,
+                        lat: Number(result.lat),
+                        lng: Number(result.lng),
                         address: result.formattedAddress,
                         name: nameVal,
                         priority: document.getElementById("priority").value || "urgent",
@@ -425,8 +425,8 @@
             });
 
             filteredCustomers.forEach((customer) => {
-                if (!customer.lat || !customer.lng || isNaN(customer.lat) || isNaN(customer.lng)) {
-                    console.warn(`Invalid coordinates for customer ${customer.name}`);
+                if (!customer.lat || !customer.lng || isNaN(Number(customer.lat)) || isNaN(Number(customer.lng))) {
+                    console.warn(`Skipping marker for ${customer.name} - invalid coords: lat=${customer.lat} (${typeof customer.lat}), lng=${customer.lng} (${typeof customer.lng})`);
                     return;
                 }
 
@@ -435,14 +435,14 @@
                     pinColor = "pink";
                 } else {
                     switch (customer.priority) {
-                        case "urgent": pinColor = "blue"; break;
-                        case "high": pinColor = "green"; break;
-                        case "medium": pinColor = "yellow"; break;
-                        case "low": pinColor = "red"; break;
-                        case "never": pinColor = "orange"; break;
-                        case "no": pinColor = "purple"; break;
-                        case "ucc": pinColor = "#8B00FF"; break;
-                        default: pinColor = "purple";
+                        case "urgent":  pinColor = "blue";    break;
+                        case "high":    pinColor = "green";   break;
+                        case "medium":  pinColor = "yellow";  break;
+                        case "low":     pinColor = "red";     break;
+                        case "never":   pinColor = "orange";  break;
+                        case "no":      pinColor = "purple";  break;
+                        case "ucc":     pinColor = "ltblue";  break;  // Reliable light blue for UCC
+                        default:        pinColor = "purple";
                     }
                 }
 
@@ -463,10 +463,12 @@
                 });
 
                 const marker = new google.maps.Marker({
-                    position: { lat: customer.lat, lng: customer.lng },
+                    position: { lat: Number(customer.lat), lng: Number(customer.lng) },
                     map: map,
                     title: customer.name,
-                    icon: { url: `http://maps.google.com/mapfiles/ms/icons/${pinColor}-dot.png` },
+                    icon: {
+                        url: `https://maps.google.com/mapfiles/ms/icons/${pinColor}-dot.png`
+                    },
                     customerId: customer.id
                 });
 
@@ -496,3 +498,4 @@
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAk5eJEWBbPMOJjybLkJvQ9vJgvFw87030&callback=initMap" async defer></script>
 </body>
 </html>
+
