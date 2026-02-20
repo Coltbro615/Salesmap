@@ -4,31 +4,48 @@
   <meta charset="UTF-8">
   <title>Sales Map - Multi-Tenant v2</title>
   <style>
-    body { margin: 0; font-family: Arial, sans-serif; height: 100vh; overflow: hidden; }
-    #main-container { display: flex; height: 100vh; }
-    #map { height: 100vh; width: 70%; position: relative; }
-    #sidebar { height: 100vh; width: 30%; padding: 15px; background: #f0f0f0; overflow-y: auto; box-sizing: border-box; }
-    #customer-list-container { margin-top: 20px; }
-    #customer-list { height: 380px; overflow-y: auto; background: white; border: 1px solid #ccc; }
-    #customer-list ul { list-style: none; padding: 0; margin: 0; }
-    #customer-list li { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; }
-    #customer-list li:hover { background: #ddd; }
-    input, textarea, select { width: 100%; margin: 6px 0; padding: 6px; box-sizing: border-box; }
-    button { margin: 6px 0; padding: 8px; width: 100%; }
-    #pin-legend {
-      position: absolute; bottom: 20px; left: 20px; background: white; padding: 12px;
-      border: 1px solid #ccc; font-size: 14px; z-index: 1001; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    body { margin: 0; font-family: Arial, sans-serif; height: auto; }
+    #main-container { display: flex; }
+    #map {
+      height: 100vh;
+      min-height: 100vh;
+      width: 70%;
+      min-width: 70%;
+      position: relative;
+      display: block;
     }
-    .legend-item { display: flex; align-items: center; margin: 6px 0; }
-    .legend-color { width: 22px; height: 22px; margin-right: 8px; border: 1px solid #999; }
-    .priority-urgent { color: blue; font-weight: bold; }
+    #sidebar { height: 100vh; width: 30%; padding: 10px; background: #f0f0f0; overflow-y: auto; }
+    #customer-list-container { width: 100%; background: #f0f0f0; padding: 10px; }
+    #customer-list { height: 400px; overflow-y: auto; }
+    #customer-list ul { list-style: none; padding: 0; margin: 0; }
+    #customer-list li { padding: 5px; cursor: pointer; }
+    #customer-list li:hover { background: #ddd; }
+    input, textarea, select { width: 100%; margin: 5px 0; }
+    button { margin: 5px 0; }
+    #pin-legend {
+      position: absolute;
+      bottom: 50px;
+      left: 20px;
+      background: white;
+      padding: 10px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      z-index: 1001;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .legend-item { display: flex; align-items: center; margin: 5px 0; }
+    .legend-color { width: 20px; height: 20px; margin-right: 5px; }
+    #auth-container { margin-bottom: 10px; }
+    #filter { height: 100px; }
+    #notes-section textarea { height: 100px; }
+    .priority-urgent { color: blue; }
     .priority-high { color: green; }
     .priority-medium { color: #d4a017; }
     .priority-low { color: red; }
     .priority-never { color: orange; }
     .priority-no { color: purple; }
     .priority-ucc { color: #00BFFF; font-weight: bold; }
-    .priority-overdue { color: pink; font-weight: bold; }
+    .priority-overdue { color: pink; }
   </style>
 </head>
 <body>
@@ -42,7 +59,6 @@
         <button onclick="signOut()" id="signOutButton" style="display: none;">Sign Out</button>
         <p id="auth-status">Not signed in</p>
       </div>
-
       <h2>Add/Edit Customer</h2>
       <input id="name" placeholder="Customer Name" disabled>
       <input id="address" placeholder="Customer Address" disabled>
@@ -57,9 +73,9 @@
       </select>
       <div id="notes-section">
         <input id="contactName" placeholder="Contact Name" disabled>
-        <input id="phone" type="tel" placeholder="Phone" disabled>
-        <input id="emailContact" type="email" placeholder="Email" disabled>
-        <textarea id="notes" placeholder="Notes" disabled></textarea>
+        <input id="phone" type="tel" placeholder="Phone Number" disabled>
+        <input id="emailContact" type="email" placeholder="Email Address" disabled>
+        <textarea id="notes" placeholder="Additional Notes" disabled></textarea>
       </div>
       <input id="lastVisit" type="date" disabled>
       <select id="reminders" multiple disabled>
@@ -71,13 +87,12 @@
         <option value="6 months">6 Months</option>
         <option value="12 months">12 Months</option>
       </select>
-
       <button id="addCustomerButton" onclick="addCustomer()" disabled>Add Customer</button>
       <button id="saveEditButton" onclick="saveEditedCustomer()" style="display: none;" disabled>Save Changes</button>
       <button id="cancelEditButton" onclick="cancelEdit()" style="display: none;">Cancel</button>
 
       <h3>Filter by Priority</h3>
-      <select id="filter" multiple onchange="applyFilter()" disabled style="height:120px">
+      <select id="filter" multiple onchange="applyFilter()" disabled>
         <option value="all">All</option>
         <option value="urgent">Hotlist (Blue)</option>
         <option value="high">High (Green)</option>
@@ -88,7 +103,6 @@
         <option value="ucc">UCC (Light Blue)</option>
         <option value="overdue">Overdue (Pink)</option>
       </select>
-
       <h3>Search Customer</h3>
       <input id="search" placeholder="Search by name" disabled onkeyup="searchCustomers()">
     </div>
@@ -96,7 +110,9 @@
 
   <div id="customer-list-container">
     <h3>Customer List</h3>
-    <div id="customer-list"><ul id="customer-list-ul"></ul></div>
+    <div id="customer-list">
+      <ul id="customer-list-ul"></ul>
+    </div>
   </div>
 
   <div id="pin-legend">
@@ -145,18 +161,18 @@
     let currentInfoWindow = null;
     let geocoder;
     let today = new Date();
+    window.customers = [];
 
     // ====================== AUTH ======================
     auth.onAuthStateChanged(async (user) => {
       const status = document.getElementById("auth-status");
       const signOutBtn = document.getElementById("signOutButton");
-      const inputs = document.querySelectorAll("#name, #address, #priority, #contactName, #phone, #emailContact, #notes, #lastVisit, #reminders, #addCustomerButton, #saveEditButton, #cancelEditButton, #filter, #search");
+      const inputs = document.querySelectorAll("#name,#address,#priority,#contactName,#phone,#emailContact,#notes,#lastVisit,#reminders,#addCustomerButton,#saveEditButton,#cancelEditButton,#filter,#search");
 
       if (user) {
         status.textContent = `Signed in as ${user.email}`;
         signOutBtn.style.display = "block";
         inputs.forEach(i => i.disabled = false);
-
         currentAccountId = await getOrCreateAccount(user.uid, user.email);
         loadCustomers();
       } else {
@@ -164,6 +180,7 @@
         signOutBtn.style.display = "none";
         inputs.forEach(i => i.disabled = true);
         currentAccountId = null;
+        window.customers = [];
         initMap();
       }
     });
@@ -192,7 +209,7 @@
 
     function signOut() { auth.signOut(); }
 
-    // ====================== CUSTOMERS ======================
+    // ====================== FIRESTORE REFS ======================
     function customersRef() {
       return db.collection(`accounts/${currentAccountId}/customers`);
     }
@@ -205,6 +222,7 @@
       });
     }
 
+    // ====================== CUSTOMER FUNCTIONS ======================
     function addCustomer() {
       const nameVal = document.getElementById("name").value.trim();
       const addressVal = document.getElementById("address").value.trim();
@@ -317,13 +335,17 @@
     function applyFilter() { initMap(getSelectedFilters()); }
     function searchCustomers() { initMap(getSelectedFilters(), document.getElementById("search").value.toLowerCase()); }
 
+    // ====================== MAP ======================
     function initMap(filters = ["all"], search = "") {
+      console.log("initMap called");
+      const mapDiv = document.getElementById("map");
       if (!map) {
-        map = new google.maps.Map(document.getElementById("map"), {
+        map = new google.maps.Map(mapDiv, {
           zoom: 7,
           center: { lat: 35.7796, lng: -78.6382 }
         });
       }
+
       markers.forEach(m => m.setMap(null));
       markers = [];
 
@@ -408,7 +430,7 @@
       });
     }
 
-    // ====================== ONE-TIME MIGRATION ======================
+    // ====================== MIGRATION ======================
     async function migrateOldCustomers() {
       const status = document.getElementById("migration-status");
       status.textContent = "Starting migration...";
@@ -451,8 +473,18 @@
 
       status.innerHTML = `✅ Migration complete!<br>${successCount} customers copied.<br>Refresh the page to see them.`;
     }
-  </script>
 
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAk5eJEWBbPMOJjybLkJvQ9vJgvFw87030&callback=initMap" async defer></script>
+    // Make initMap global for Google Maps callback
+    window.initMap = initMap;
+
+    // Load Google Maps safely after page is ready
+    window.addEventListener('load', () => {
+      const script = document.createElement('script');
+      script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyAk5eJEWBbPMOJjybLkJvQ9vJgvFw87030&callback=initMap";
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    });
+  </script>
 </body>
 </html>
