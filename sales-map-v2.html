@@ -2,18 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Sales Map - Multi-Tenant v2</title>
+  <title>Sales Map</title>
   <style>
     body { margin: 0; font-family: Arial, sans-serif; height: auto; }
     #main-container { display: flex; }
-    #map {
-      height: 100vh;
-      min-height: 100vh;
-      width: 70%;
-      min-width: 70%;
-      position: relative;
-      display: block;
-    }
+    #map { height: 100vh; min-height: 100vh; width: 70%; min-width: 70%; position: relative; display: block; }
     #sidebar { height: 100vh; width: 30%; padding: 10px; background: #f0f0f0; overflow-y: auto; }
     #customer-list-container { width: 100%; background: #f0f0f0; padding: 10px; }
     #customer-list { height: 400px; overflow-y: auto; }
@@ -22,17 +15,7 @@
     #customer-list li:hover { background: #ddd; }
     input, textarea, select { width: 100%; margin: 5px 0; }
     button { margin: 5px 0; }
-    #pin-legend {
-      position: absolute;
-      bottom: 50px;
-      left: 20px;
-      background: white;
-      padding: 10px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-      z-index: 1001;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
+    #pin-legend { position: absolute; bottom: 50px; left: 20px; background: white; padding: 10px; border: 1px solid #ccc; font-size: 14px; z-index: 1001; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
     .legend-item { display: flex; align-items: center; margin: 5px 0; }
     .legend-color { width: 20px; height: 20px; margin-right: 5px; }
     #auth-container { margin-bottom: 10px; }
@@ -55,10 +38,16 @@
       <div id="auth-container">
         <input id="email" type="email" placeholder="Email">
         <input id="password" type="password" placeholder="Password">
+        <input id="companyName" placeholder="Company Name (e.g. Smith Roofing)" style="display:none;">
         <button onclick="signIn()">Sign In</button>
+        <button onclick="showSignup()">Create Account</button>
+        <button onclick="signUp()" id="createBtn" style="display:none;">Create My Account</button>
         <button onclick="signOut()" id="signOutButton" style="display: none;">Sign Out</button>
         <p id="auth-status">Not signed in</p>
       </div>
+
+      <h2 id="companyHeader">Sales Map</h2>
+
       <h2>Add/Edit Customer</h2>
       <input id="name" placeholder="Customer Name" disabled>
       <input id="address" placeholder="Customer Address" disabled>
@@ -153,7 +142,6 @@
     let today = new Date();
     window.customers = [];
 
-    // AUTH
     auth.onAuthStateChanged(async (user) => {
       const status = document.getElementById("auth-status");
       const signOutBtn = document.getElementById("signOutButton");
@@ -178,16 +166,24 @@
     async function getOrCreateAccount(uid, email) {
       const userRef = db.collection("users").doc(uid);
       const userDoc = await userRef.get();
-      if (userDoc.exists) return userDoc.data().accountId;
+      if (userDoc.exists) {
+        const accId = userDoc.data().accountId;
+        const accDoc = await db.collection("accounts").doc(accId).get();
+        document.getElementById("companyHeader").textContent = (accDoc.data().name || "Sales Map");
+        return accId;
+      }
 
+      // New user - create account with company name
+      const companyName = document.getElementById("companyName").value.trim() || email.split("@")[0] + "'s Company";
       const accountRef = db.collection("accounts").doc();
       await accountRef.set({
         ownerUid: uid,
-        name: email.split("@")[0] + "'s Company",
+        name: companyName,
         members: [uid],
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       await userRef.set({ accountId: accountRef.id });
+      document.getElementById("companyHeader").textContent = companyName;
       return accountRef.id;
     }
 
@@ -195,6 +191,20 @@
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
       auth.signInWithEmailAndPassword(email, password).catch(err => alert("Sign-in failed: " + err.message));
+    }
+
+    function showSignup() {
+      document.getElementById("companyName").style.display = "block";
+      document.getElementById("createBtn").style.display = "block";
+    }
+
+    function signUp() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      if (!email || !password) return alert("Email and password required");
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => alert("Account created successfully! You are now signed in."))
+        .catch(err => alert("Sign-up failed: " + err.message));
     }
 
     function signOut() { auth.signOut(); }
@@ -208,6 +218,8 @@
         initMap(getSelectedFilters());
       });
     }
+
+    // (All other functions are unchanged from the working version - addCustomer, edit, save, delete, clearForm, isOverdue, filters, initMap, geocodeAddress)
 
     function addCustomer() {
       const nameVal = document.getElementById("name").value.trim();
