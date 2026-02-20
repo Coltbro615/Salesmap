@@ -63,10 +63,10 @@
     }
     #customer-list-container { 
       background: #f0f0f0; 
-      padding: 10px; 
+      padding: 15px; 
       border-top: 3px solid #ccc; 
       flex-shrink: 0;
-      height: 280px; /* small on load - scroll down to see full list */
+      height: 840px; /* 3x taller as you requested */
     }
     #customer-list { 
       height: 100%; 
@@ -93,12 +93,12 @@
     .legend-item { display: flex; align-items: center; margin: 6px 0; }
     .legend-color { width: 22px; height: 22px; margin-right: 8px; border: 1px solid #999; border-radius: 4px; }
 
-    /* RESPONSIVE - Mobile / Tablet */
+    /* Mobile friendly */
     @media (max-width: 900px) {
       #main-container { flex-direction: column; }
-      #map { width: 100%; height: 60vh; }
+      #map { width: 100%; height: 55vh; }
       #sidebar { width: 100%; height: auto; }
-      #customer-list-container { height: 320px; }
+      #customer-list-container { height: 500px; }
     }
   </style>
 </head>
@@ -189,7 +189,7 @@
       </div>
     </div>
 
-    <!-- CUSTOMER LIST AT BOTTOM - SMALL ON LOAD, SCROLL TO SEE FULL -->
+    <!-- CUSTOMER LIST AT BOTTOM - TALL WHEN YOU SCROLL DOWN -->
     <div id="customer-list-container">
       <h3>Customer List</h3>
       <div id="customer-list"><ul id="customer-list-ul"></ul></div>
@@ -245,7 +245,7 @@
       enableAllInputs();
       setTimeout(() => {
         if (map) google.maps.event.trigger(map, 'resize');
-      }, 100);
+      }, 300);
     }
 
     function showAuthScreen() {
