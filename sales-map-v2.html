@@ -110,9 +110,7 @@
 
   <div id="customer-list-container">
     <h3>Customer List</h3>
-    <div id="customer-list">
-      <ul id="customer-list-ul"></ul>
-    </div>
+    <div id="customer-list"><ul id="customer-list-ul"></ul></div>
   </div>
 
   <div id="pin-legend">
@@ -135,10 +133,11 @@
     <p id="migration-status" style="margin: 8px 0 0 0; font-size: 13px; color: #666;"></p>
   </div>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDKs (includes old database for migration) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
   <script>
     const firebaseConfig = {
@@ -163,7 +162,7 @@
     let today = new Date();
     window.customers = [];
 
-    // ====================== AUTH ======================
+    // AUTH
     auth.onAuthStateChanged(async (user) => {
       const status = document.getElementById("auth-status");
       const signOutBtn = document.getElementById("signOutButton");
@@ -209,10 +208,7 @@
 
     function signOut() { auth.signOut(); }
 
-    // ====================== FIRESTORE REFS ======================
-    function customersRef() {
-      return db.collection(`accounts/${currentAccountId}/customers`);
-    }
+    function customersRef() { return db.collection(`accounts/${currentAccountId}/customers`); }
 
     async function loadCustomers() {
       if (!currentAccountId) return;
@@ -222,7 +218,6 @@
       });
     }
 
-    // ====================== CUSTOMER FUNCTIONS ======================
     function addCustomer() {
       const nameVal = document.getElementById("name").value.trim();
       const addressVal = document.getElementById("address").value.trim();
@@ -335,17 +330,11 @@
     function applyFilter() { initMap(getSelectedFilters()); }
     function searchCustomers() { initMap(getSelectedFilters(), document.getElementById("search").value.toLowerCase()); }
 
-    // ====================== MAP ======================
     function initMap(filters = ["all"], search = "") {
-      console.log("initMap called");
       const mapDiv = document.getElementById("map");
       if (!map) {
-        map = new google.maps.Map(mapDiv, {
-          zoom: 7,
-          center: { lat: 35.7796, lng: -78.6382 }
-        });
+        map = new google.maps.Map(mapDiv, { zoom: 7, center: { lat: 35.7796, lng: -78.6382 } });
       }
-
       markers.forEach(m => m.setMap(null));
       markers = [];
 
@@ -395,7 +384,6 @@
         `;
 
         const infoWindow = new google.maps.InfoWindow({ content: infoContent });
-
         const marker = new google.maps.Marker({
           position: { lat: Number(c.lat), lng: Number(c.lng) },
           map: map,
@@ -403,7 +391,6 @@
           icon: `https://maps.google.com/mapfiles/ms/icons/${color}-dot.png`,
           customerId: c.id
         });
-
         marker.infoWindow = infoWindow;
         marker.addListener("click", () => {
           if (currentInfoWindow) currentInfoWindow.close();
@@ -430,28 +417,28 @@
       });
     }
 
-    // ====================== MIGRATION ======================
+    // IMPROVED MIGRATION
     async function migrateOldCustomers() {
       const status = document.getElementById("migration-status");
-      status.textContent = "Starting migration...";
+      status.textContent = "Connecting to old database...";
 
-      const oldDb = firebase.database();
-      const oldCustomersRef = oldDb.ref("customers");
+      try {
+        const oldDb = firebase.database();
+        const oldCustomersRef = oldDb.ref("customers");
+        const snapshot = await new Promise((resolve, reject) => oldCustomersRef.once("value", resolve, reject));
+        const oldData = snapshot.val();
 
-      const snapshot = await new Promise(resolve => oldCustomersRef.once("value", resolve));
-      const oldData = snapshot.val();
-      if (!oldData) {
-        status.textContent = "✅ No old customers found.";
-        return;
-      }
+        if (!oldData) {
+          status.textContent = "✅ No old customers found.";
+          return;
+        }
 
-      status.textContent = `Found ${Object.keys(oldData).length} old customers. Copying now...`;
+        status.textContent = `Found ${Object.keys(oldData).length} customers. Copying now...`;
 
-      const newRef = db.collection(`accounts/${currentAccountId}/customers`);
-      let successCount = 0;
+        const newRef = db.collection(`accounts/${currentAccountId}/customers`);
+        let successCount = 0;
 
-      for (const [oldId, customer] of Object.entries(oldData)) {
-        try {
+        for (const [oldId, customer] of Object.entries(oldData)) {
           await newRef.add({
             name: customer.name || "",
             address: customer.address || "",
@@ -468,16 +455,17 @@
             migratedFrom: oldId
           });
           successCount++;
-        } catch (e) { console.error("Failed one:", e); }
-      }
+        }
 
-      status.innerHTML = `✅ Migration complete!<br>${successCount} customers copied.<br>Refresh the page to see them.`;
+        status.innerHTML = `✅ Migration complete!<br>${successCount} customers copied.<br>Refresh the page to see them all.`;
+      } catch (e) {
+        console.error(e);
+        status.innerHTML = `❌ Error: ${e.message}<br>Check console (F12) and tell me what it says.`;
+      }
     }
 
-    // Make initMap global for Google Maps callback
     window.initMap = initMap;
 
-    // Load Google Maps safely after page is ready
     window.addEventListener('load', () => {
       const script = document.createElement('script');
       script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyAk5eJEWBbPMOJjybLkJvQ9vJgvFw87030&callback=initMap";
