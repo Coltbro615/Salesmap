@@ -66,7 +66,7 @@
       padding: 15px; 
       border-top: 3px solid #ccc; 
       flex-shrink: 0;
-      height: 840px; /* exactly the size you like - stays this size from now on */
+      height: 840px; /* exactly the size you like - stays this size forever */
     }
     #customer-list { 
       height: 100%; 
@@ -236,7 +236,7 @@
       document.getElementById("pin-legend").style.display = "block";
       enableAllInputs();
 
-      // Force map creation and resize AFTER the container is visible
+      // Force map creation and resize after screen is visible
       setTimeout(() => {
         const mapDiv = document.getElementById("map");
         if (!map) {
