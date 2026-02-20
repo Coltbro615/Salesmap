@@ -340,8 +340,9 @@
         window.customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         initMap(getSelectedFilters());
       }, (error) => {
-        console.error("Data load error:", error);
-        initMap(); // fallback so map still shows even if data fails
+        console.error("Firestore error:", error);
+        window.customers = [];
+        initMap([]); // fallback - show empty map so you can see the map
       });
     }
 
