@@ -66,7 +66,7 @@
       padding: 15px; 
       border-top: 3px solid #ccc; 
       flex-shrink: 0;
-      height: 280px; /* small on load - scroll down to see full list */
+      height: 840px; /* bigger version you liked */
     }
     #customer-list { 
       height: 100%; 
@@ -92,6 +92,14 @@
     }
     .legend-item { display: flex; align-items: center; margin: 6px 0; }
     .legend-color { width: 22px; height: 22px; margin-right: 8px; border: 1px solid #999; border-radius: 4px; }
+
+    /* Mobile friendly */
+    @media (max-width: 900px) {
+      #main-container { flex-direction: column; }
+      #map { width: 100%; height: 55vh; }
+      #sidebar { width: 100%; height: auto; }
+      #customer-list-container { height: 500px; }
+    }
   </style>
 </head>
 <body>
@@ -181,7 +189,7 @@
       </div>
     </div>
 
-    <!-- CUSTOMER LIST AT BOTTOM - SCROLL TO SEE FULL -->
+    <!-- CUSTOMER LIST AT BOTTOM - TALL WHEN YOU SCROLL -->
     <div id="customer-list-container">
       <h3>Customer List</h3>
       <div id="customer-list"><ul id="customer-list-ul"></ul></div>
@@ -235,19 +243,19 @@
       document.getElementById("map-screen").style.display = "flex";
       document.getElementById("pin-legend").style.display = "block";
       enableAllInputs();
-      
-      // Force map creation and resize AFTER the screen is visible
+
+      // Force map creation and resize after container is visible
       setTimeout(() => {
         const mapDiv = document.getElementById("map");
         if (!map) {
           map = new google.maps.Map(mapDiv, { zoom: 7, center: { lat: 35.7796, lng: -78.6382 } });
         }
         google.maps.event.trigger(map, 'resize');
-      }, 300);
+      }, 400);
 
       setTimeout(() => {
         if (map) google.maps.event.trigger(map, 'resize');
-      }, 800);
+      }, 900);
     }
 
     function showAuthScreen() {
