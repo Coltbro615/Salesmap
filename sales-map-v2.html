@@ -125,19 +125,10 @@
     <div class="legend-item"><div class="legend-color" style="background-color: pink;"></div>Overdue</div>
   </div>
 
-  <!-- ONE-TIME MIGRATION BUTTON -->
-  <div style="position: fixed; bottom: 20px; right: 20px; background: white; padding: 15px; border: 2px solid #ff9800; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 9999;">
-    <button onclick="migrateOldCustomers()" style="padding: 12px 20px; font-size: 16px; background: #ff9800; color: white; border: none; border-radius: 6px; cursor: pointer;">
-      🚀 ONE-TIME: Copy All My Old Customers to New System
-    </button>
-    <p id="migration-status" style="margin: 8px 0 0 0; font-size: 13px; color: #666;"></p>
-  </div>
-
-  <!-- Firebase SDKs (includes old database for migration) -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
   <script>
     const firebaseConfig = {
@@ -415,53 +406,6 @@
           callback(null);
         }
       });
-    }
-
-    // IMPROVED MIGRATION
-    async function migrateOldCustomers() {
-      const status = document.getElementById("migration-status");
-      status.textContent = "Connecting to old database...";
-
-      try {
-        const oldDb = firebase.database();
-        const oldCustomersRef = oldDb.ref("customers");
-        const snapshot = await new Promise((resolve, reject) => oldCustomersRef.once("value", resolve, reject));
-        const oldData = snapshot.val();
-
-        if (!oldData) {
-          status.textContent = "✅ No old customers found.";
-          return;
-        }
-
-        status.textContent = `Found ${Object.keys(oldData).length} customers. Copying now...`;
-
-        const newRef = db.collection(`accounts/${currentAccountId}/customers`);
-        let successCount = 0;
-
-        for (const [oldId, customer] of Object.entries(oldData)) {
-          await newRef.add({
-            name: customer.name || "",
-            address: customer.address || "",
-            lat: customer.lat,
-            lng: customer.lng,
-            priority: customer.priority || "urgent",
-            contactName: customer.contactName || "",
-            phone: customer.phone || "",
-            emailContact: customer.emailContact || "",
-            notes: customer.notes || "",
-            lastVisit: customer.lastVisit || "",
-            reminders: customer.reminders || ["never"],
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            migratedFrom: oldId
-          });
-          successCount++;
-        }
-
-        status.innerHTML = `✅ Migration complete!<br>${successCount} customers copied.<br>Refresh the page to see them all.`;
-      } catch (e) {
-        console.error(e);
-        status.innerHTML = `❌ Error: ${e.message}<br>Check console (F12) and tell me what it says.`;
-      }
     }
 
     window.initMap = initMap;
