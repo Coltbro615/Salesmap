@@ -7,13 +7,24 @@
     body { 
       margin: 0; 
       font-family: Arial, sans-serif; 
-      height: 100vh; 
-      overflow: auto; 
+      height: auto; 
+      overflow-y: auto; 
       background: #f8f9fa; 
     }
-    #auth-screen, #map-screen { height: 100vh; width: 100%; }
-    #auth-screen { display: flex; align-items: center; justify-content: center; }
-    .auth-box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 380px; text-align: center; }
+    #auth-screen { 
+      height: 100vh; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+    }
+    .auth-box { 
+      background: white; 
+      padding: 40px; 
+      border-radius: 12px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+      width: 380px; 
+      text-align: center; 
+    }
     input, button, select, textarea { 
       width: 100%; 
       padding: 12px; 
@@ -25,9 +36,21 @@
     }
     button { background: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
     button:hover { background: #0056b3; }
-    #map-screen { display: none; flex-direction: column; height: 100vh; }
-    #main-container { display: flex; flex: 1; min-height: 0; }
-    #map { height: 100%; width: 70%; position: relative; }
+    #map-screen { 
+      display: none; 
+      flex-direction: column; 
+      min-height: 100vh; 
+    }
+    #main-container { 
+      display: flex; 
+      flex: 1; 
+      min-height: 0; 
+    }
+    #map { 
+      height: 100%; 
+      width: 70%; 
+      position: relative; 
+    }
     #sidebar { 
       height: 100%; 
       width: 30%; 
@@ -39,12 +62,18 @@
     }
     #customer-list-container { 
       background: #f0f0f0; 
-      padding: 10px; 
-      border-top: 2px solid #ccc; 
+      padding: 15px; 
+      border-top: 3px solid #ccc; 
       flex-shrink: 0;
-      height: 280px; /* SMALL so you have to scroll down to see it */
+      height: 480px; /* nice full size when you scroll to it */
     }
-    #customer-list { height: 100%; overflow-y: auto; background: white; border: 1px solid #ccc; border-radius: 8px; }
+    #customer-list { 
+      height: 100%; 
+      overflow-y: auto; 
+      background: white; 
+      border: 1px solid #ccc; 
+      border-radius: 8px; 
+    }
     #customer-list ul { list-style: none; padding: 0; margin: 0; }
     #customer-list li { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; }
     #customer-list li:hover { background: #f0f0f0; }
@@ -151,7 +180,7 @@
       </div>
     </div>
 
-    <!-- CUSTOMER LIST AT BOTTOM - SMALL SO YOU MUST SCROLL TO SEE IT -->
+    <!-- CUSTOMER LIST BELOW - ONLY VISIBLE AFTER SCROLLING DOWN -->
     <div id="customer-list-container">
       <h3>Customer List</h3>
       <div id="customer-list"><ul id="customer-list-ul"></ul></div>
