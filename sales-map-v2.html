@@ -66,7 +66,7 @@
       padding: 15px; 
       border-top: 3px solid #ccc; 
       flex-shrink: 0;
-      height: 840px; /* exactly the size you like - stays this size forever */
+      height: 840px; /* locked at the size you like */
     }
     #customer-list { 
       height: 100%; 
@@ -546,7 +546,7 @@
 
     window.addEventListener('load', () => {
       const script = document.createElement('script');
-      script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyAk5eJEWBbPMOJjybLkJvQ9vJgvFw87030&callback=initMap";
+      script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyAk5eJEWBbPMOJjybLkJvQ9vJgvFw87030&callback=initMap&loading=async";
       script.async = true;
       script.defer = true;
       document.head.appendChild(script);
