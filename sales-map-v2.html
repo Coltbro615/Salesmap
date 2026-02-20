@@ -19,7 +19,7 @@
     }
     button { background: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
     button:hover { background: #0056b3; }
-    #map-screen { display: none; flex-direction: column; }
+    #map-screen { display: none; flex-direction: column; height: 100vh; }
     #main-container { display: flex; flex: 1; min-height: 0; }
     #map { height: 100%; width: 70%; position: relative; }
     #sidebar { 
@@ -36,8 +36,9 @@
       padding: 10px; 
       border-top: 2px solid #ccc; 
       flex-shrink: 0;
+      height: 420px;
     }
-    #customer-list { height: 380px; overflow-y: auto; background: white; border: 1px solid #ccc; border-radius: 8px; }
+    #customer-list { height: 100%; overflow-y: auto; background: white; border: 1px solid #ccc; border-radius: 8px; }
     #customer-list ul { list-style: none; padding: 0; margin: 0; }
     #customer-list li { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; }
     #customer-list li:hover { background: #f0f0f0; }
@@ -144,7 +145,7 @@
       </div>
     </div>
 
-    <!-- CUSTOMER LIST AT BOTTOM - FULL WIDTH -->
+    <!-- CUSTOMER LIST AT BOTTOM - SMALLER -->
     <div id="customer-list-container">
       <h3>Customer List</h3>
       <div id="customer-list"><ul id="customer-list-ul"></ul></div>
@@ -191,7 +192,7 @@
     let today = new Date();
     window.customers = [];
 
-    auth.signOut(); // force manual login
+    auth.signOut(); // force manual login every time
 
     function showMapScreen() {
       document.getElementById("auth-screen").style.display = "none";
