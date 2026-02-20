@@ -7,7 +7,7 @@
     body { 
       margin: 0; 
       font-family: Arial, sans-serif; 
-      height: auto; 
+      height: 100vh; 
       overflow-y: auto; 
       background: #f8f9fa; 
     }
@@ -39,7 +39,7 @@
     #map-screen { 
       display: none; 
       flex-direction: column; 
-      min-height: 100vh; 
+      height: 100vh; 
     }
     #main-container { 
       display: flex; 
@@ -58,14 +58,13 @@
       background: #f0f0f0; 
       overflow-y: auto; 
       box-sizing: border-box; 
-      min-height: 0;
     }
     #customer-list-container { 
       background: #f0f0f0; 
-      padding: 15px; 
+      padding: 10px; 
       border-top: 3px solid #ccc; 
       flex-shrink: 0;
-      height: 480px; /* nice full size when you scroll to it */
+      height: 280px; /* Small so map fills screen on load */
     }
     #customer-list { 
       height: 100%; 
@@ -180,7 +179,7 @@
       </div>
     </div>
 
-    <!-- CUSTOMER LIST BELOW - ONLY VISIBLE AFTER SCROLLING DOWN -->
+    <!-- CUSTOMER LIST AT BOTTOM - SMALL SO YOU SCROLL TO SEE IT -->
     <div id="customer-list-container">
       <h3>Customer List</h3>
       <div id="customer-list"><ul id="customer-list-ul"></ul></div>
@@ -234,6 +233,9 @@
       document.getElementById("map-screen").style.display = "flex";
       document.getElementById("pin-legend").style.display = "block";
       enableAllInputs();
+      setTimeout(() => {
+        if (map) google.maps.event.trigger(map, 'resize');
+      }, 100);
     }
 
     function showAuthScreen() {
