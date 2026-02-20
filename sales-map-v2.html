@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sales Map</title>
   <style>
     body { 
       margin: 0; 
       font-family: Arial, sans-serif; 
-      height: 100vh; 
+      height: auto; 
       overflow-y: auto; 
       background: #f8f9fa; 
     }
@@ -24,6 +25,7 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
       width: 380px; 
       text-align: center; 
+      max-width: 90%; 
     }
     input, button, select, textarea { 
       width: 100%; 
@@ -39,7 +41,7 @@
     #map-screen { 
       display: none; 
       flex-direction: column; 
-      height: 100vh; 
+      min-height: 100vh; 
     }
     #main-container { 
       display: flex; 
@@ -64,7 +66,7 @@
       padding: 10px; 
       border-top: 3px solid #ccc; 
       flex-shrink: 0;
-      height: 280px; /* Small so map fills screen on load */
+      height: 280px; /* small on load - scroll down to see full list */
     }
     #customer-list { 
       height: 100%; 
@@ -90,6 +92,14 @@
     }
     .legend-item { display: flex; align-items: center; margin: 6px 0; }
     .legend-color { width: 22px; height: 22px; margin-right: 8px; border: 1px solid #999; border-radius: 4px; }
+
+    /* RESPONSIVE - Mobile / Tablet */
+    @media (max-width: 900px) {
+      #main-container { flex-direction: column; }
+      #map { width: 100%; height: 60vh; }
+      #sidebar { width: 100%; height: auto; }
+      #customer-list-container { height: 320px; }
+    }
   </style>
 </head>
 <body>
@@ -179,7 +189,7 @@
       </div>
     </div>
 
-    <!-- CUSTOMER LIST AT BOTTOM - SMALL SO YOU SCROLL TO SEE IT -->
+    <!-- CUSTOMER LIST AT BOTTOM - SMALL ON LOAD, SCROLL TO SEE FULL -->
     <div id="customer-list-container">
       <h3>Customer List</h3>
       <div id="customer-list"><ul id="customer-list-ul"></ul></div>
