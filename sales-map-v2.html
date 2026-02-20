@@ -8,23 +8,53 @@
     #auth-screen, #map-screen { height: 100vh; width: 100%; }
     #auth-screen { display: flex; align-items: center; justify-content: center; }
     .auth-box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 380px; text-align: center; }
-    input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; }
-    button { background: #007bff; color: white; border: none; font-size: 16px; cursor: pointer; }
+    input, button, select, textarea { 
+      width: 100%; 
+      padding: 12px; 
+      margin: 8px 0; 
+      border-radius: 8px; 
+      border: 1px solid #ccc; 
+      font-size: 15px; 
+      box-sizing: border-box; 
+    }
+    button { background: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
     button:hover { background: #0056b3; }
     #map-screen { display: none; flex-direction: column; }
-    #main-container { display: flex; flex: 1; }
+    #main-container { display: flex; flex: 1; min-height: 0; }
     #map { height: 100%; width: 70%; position: relative; }
-    #sidebar { height: 100%; width: 30%; padding: 15px; background: #f0f0f0; overflow-y: auto; box-sizing: border-box; }
-    #customer-list-container { background: #f0f0f0; padding: 10px; border-top: 1px solid #ccc; }
-    #customer-list { height: 400px; overflow-y: auto; background: white; border: 1px solid #ccc; }
+    #sidebar { 
+      height: 100%; 
+      width: 30%; 
+      padding: 15px; 
+      background: #f0f0f0; 
+      overflow-y: auto; 
+      box-sizing: border-box; 
+      min-height: 0;
+    }
+    #customer-list-container { 
+      background: #f0f0f0; 
+      padding: 10px; 
+      border-top: 2px solid #ccc; 
+      flex-shrink: 0;
+    }
+    #customer-list { height: 380px; overflow-y: auto; background: white; border: 1px solid #ccc; border-radius: 8px; }
     #customer-list ul { list-style: none; padding: 0; margin: 0; }
-    #customer-list li { padding: 5px; cursor: pointer; }
-    #customer-list li:hover { background: #ddd; }
-    input, textarea, select { width: 100%; margin: 5px 0; }
-    button { margin: 5px 0; }
-    #pin-legend { position: absolute; bottom: 50px; left: 20px; background: white; padding: 10px; border: 1px solid #ccc; font-size: 14px; z-index: 1001; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-    .legend-item { display: flex; align-items: center; margin: 5px 0; }
-    .legend-color { width: 20px; height: 20px; margin-right: 5px; }
+    #customer-list li { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; }
+    #customer-list li:hover { background: #f0f0f0; }
+    #pin-legend { 
+      position: absolute; 
+      bottom: 20px; 
+      left: 20px; 
+      background: white; 
+      padding: 12px; 
+      border: 1px solid #ccc; 
+      border-radius: 8px; 
+      font-size: 14px; 
+      z-index: 1001; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2); 
+    }
+    .legend-item { display: flex; align-items: center; margin: 6px 0; }
+    .legend-color { width: 22px; height: 22px; margin-right: 8px; border: 1px solid #999; border-radius: 4px; }
   </style>
 </head>
 <body>
@@ -114,7 +144,7 @@
       </div>
     </div>
 
-    <!-- CUSTOMER LIST AT THE BOTTOM (full width) -->
+    <!-- CUSTOMER LIST AT BOTTOM - FULL WIDTH -->
     <div id="customer-list-container">
       <h3>Customer List</h3>
       <div id="customer-list"><ul id="customer-list-ul"></ul></div>
@@ -161,8 +191,7 @@
     let today = new Date();
     window.customers = [];
 
-    // Force manual login every page load
-    auth.signOut();
+    auth.signOut(); // force manual login
 
     function showMapScreen() {
       document.getElementById("auth-screen").style.display = "none";
