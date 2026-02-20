@@ -4,49 +4,64 @@
   <meta charset="UTF-8">
   <title>Sales Map</title>
   <style>
-    body { margin: 0; font-family: Arial, sans-serif; height: auto; }
-    #main-container { display: flex; }
-    #map { height: 100vh; min-height: 100vh; width: 70%; min-width: 70%; position: relative; display: block; }
-    #sidebar { height: 100vh; width: 30%; padding: 10px; background: #f0f0f0; overflow-y: auto; }
-    #customer-list-container { width: 100%; background: #f0f0f0; padding: 10px; }
-    #customer-list { height: 400px; overflow-y: auto; }
+    body { margin: 0; font-family: Arial, sans-serif; height: 100vh; overflow: hidden; background: #f8f9fa; }
+    #auth-screen, #map-screen { height: 100vh; width: 100%; }
+    #auth-screen { display: flex; align-items: center; justify-content: center; }
+    .auth-box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 380px; text-align: center; }
+    input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; }
+    button { background: #007bff; color: white; border: none; font-size: 16px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    #map-screen { display: none; flex-direction: row; }
+    #map { height: 100vh; width: 70%; position: relative; }
+    #sidebar { height: 100vh; width: 30%; padding: 15px; background: #f0f0f0; overflow-y: auto; box-sizing: border-box; }
+    #customer-list { height: 380px; overflow-y: auto; background: white; border: 1px solid #ccc; }
     #customer-list ul { list-style: none; padding: 0; margin: 0; }
-    #customer-list li { padding: 5px; cursor: pointer; }
+    #customer-list li { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; }
     #customer-list li:hover { background: #ddd; }
-    input, textarea, select { width: 100%; margin: 5px 0; }
-    button { margin: 5px 0; }
-    #pin-legend { position: absolute; bottom: 50px; left: 20px; background: white; padding: 10px; border: 1px solid #ccc; font-size: 14px; z-index: 1001; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-    .legend-item { display: flex; align-items: center; margin: 5px 0; }
-    .legend-color { width: 20px; height: 20px; margin-right: 5px; }
-    #auth-container { margin-bottom: 10px; }
-    #filter { height: 100px; }
-    #notes-section textarea { height: 100px; }
-    .priority-urgent { color: blue; }
-    .priority-high { color: green; }
-    .priority-medium { color: #d4a017; }
-    .priority-low { color: red; }
-    .priority-never { color: orange; }
-    .priority-no { color: purple; }
-    .priority-ucc { color: #00BFFF; font-weight: bold; }
-    .priority-overdue { color: pink; }
+    input, textarea, select { width: 100%; margin: 6px 0; padding: 6px; }
+    #pin-legend { position: absolute; bottom: 20px; left: 20px; background: white; padding: 12px; border: 1px solid #ccc; font-size: 14px; z-index: 1001; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    .legend-item { display: flex; align-items: center; margin: 6px 0; }
+    .legend-color { width: 22px; height: 22px; margin-right: 8px; border: 1px solid #999; }
   </style>
 </head>
 <body>
-  <div id="main-container">
+
+  <!-- CLEAN AUTH SCREEN -->
+  <div id="auth-screen">
+    <div class="auth-box">
+      <h1>Sales Map</h1>
+      <p>Simple field sales mapping for teams</p>
+
+      <button onclick="showSignIn()" style="margin:10px 0;">Sign In</button>
+      <button onclick="showCreateAccount()" style="margin:10px 0; background:#28a745;">Create Free Account</button>
+
+      <!-- Sign In Form -->
+      <div id="signin-form" style="display:none;">
+        <input id="signin-email" type="email" placeholder="Email">
+        <input id="signin-password" type="password" placeholder="Password">
+        <button onclick="signIn()">Sign In</button>
+        <p><a href="#" onclick="showCreateAccount()">Don't have an account? Create one</a></p>
+      </div>
+
+      <!-- Create Account Form -->
+      <div id="create-form" style="display:none;">
+        <input id="create-email" type="email" placeholder="Email">
+        <input id="create-password" type="password" placeholder="Password">
+        <input id="companyName" placeholder="Company Name (required)" required>
+        <button onclick="signUp()">Create My Account</button>
+        <p><a href="#" onclick="showSignIn()">Already have an account? Sign In</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN MAP SCREEN -->
+  <div id="map-screen">
     <div id="map"></div>
     <div id="sidebar">
       <div id="auth-container">
-        <input id="email" type="email" placeholder="Email">
-        <input id="password" type="password" placeholder="Password">
-        <input id="companyName" placeholder="Company Name (e.g. Smith Roofing)" style="display:none;">
-        <button onclick="signIn()">Sign In</button>
-        <button onclick="showSignup()">Create Account</button>
-        <button onclick="signUp()" id="createBtn" style="display:none;">Create My Account</button>
-        <button onclick="signOut()" id="signOutButton" style="display: none;">Sign Out</button>
-        <p id="auth-status">Not signed in</p>
+        <h2 id="companyHeader">Sales Map</h2>
+        <button onclick="signOut()" id="signOutButton">Sign Out</button>
       </div>
-
-      <h2 id="companyHeader">Sales Map</h2>
 
       <h2>Add/Edit Customer</h2>
       <input id="name" placeholder="Customer Name" disabled>
@@ -97,12 +112,7 @@
     </div>
   </div>
 
-  <div id="customer-list-container">
-    <h3>Customer List</h3>
-    <div id="customer-list"><ul id="customer-list-ul"></ul></div>
-  </div>
-
-  <div id="pin-legend">
+  <div id="pin-legend" style="display:none;">
     <h4>Pin Color Legend</h4>
     <div class="legend-item"><div class="legend-color" style="background-color: blue;"></div>Hotlist</div>
     <div class="legend-item"><div class="legend-color" style="background-color: green;"></div>High Priority</div>
@@ -142,24 +152,35 @@
     let today = new Date();
     window.customers = [];
 
-    auth.onAuthStateChanged(async (user) => {
-      const status = document.getElementById("auth-status");
-      const signOutBtn = document.getElementById("signOutButton");
-      const inputs = document.querySelectorAll("#name,#address,#priority,#contactName,#phone,#emailContact,#notes,#lastVisit,#reminders,#addCustomerButton,#saveEditButton,#cancelEditButton,#filter,#search");
+    function showMapScreen() {
+      document.getElementById("auth-screen").style.display = "none";
+      document.getElementById("map-screen").style.display = "flex";
+      document.getElementById("pin-legend").style.display = "block";
+    }
 
+    function showAuthScreen() {
+      document.getElementById("auth-screen").style.display = "flex";
+      document.getElementById("map-screen").style.display = "none";
+      document.getElementById("pin-legend").style.display = "none";
+    }
+
+    function showSignIn() {
+      document.getElementById("signin-form").style.display = "block";
+      document.getElementById("create-form").style.display = "none";
+    }
+
+    function showCreateAccount() {
+      document.getElementById("signin-form").style.display = "none";
+      document.getElementById("create-form").style.display = "block";
+    }
+
+    auth.onAuthStateChanged(async (user) => {
       if (user) {
-        status.textContent = `Signed in as ${user.email}`;
-        signOutBtn.style.display = "block";
-        inputs.forEach(i => i.disabled = false);
         currentAccountId = await getOrCreateAccount(user.uid, user.email);
         loadCustomers();
+        showMapScreen();
       } else {
-        status.textContent = "Not signed in";
-        signOutBtn.style.display = "none";
-        inputs.forEach(i => i.disabled = true);
-        currentAccountId = null;
-        window.customers = [];
-        initMap();
+        showAuthScreen();
       }
     });
 
@@ -169,12 +190,16 @@
       if (userDoc.exists) {
         const accId = userDoc.data().accountId;
         const accDoc = await db.collection("accounts").doc(accId).get();
-        document.getElementById("companyHeader").textContent = (accDoc.data().name || "Sales Map");
+        document.getElementById("companyHeader").textContent = accDoc.data().name || "Sales Map";
         return accId;
       }
 
-      // New user - create account with company name
-      const companyName = document.getElementById("companyName").value.trim() || email.split("@")[0] + "'s Company";
+      const companyName = document.getElementById("companyName").value.trim();
+      if (!companyName) {
+        alert("Company Name is required");
+        return null;
+      }
+
       const accountRef = db.collection("accounts").doc();
       await accountRef.set({
         ownerUid: uid,
@@ -188,26 +213,22 @@
     }
 
     function signIn() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+      const email = document.getElementById("signin-email").value;
+      const password = document.getElementById("signin-password").value;
       auth.signInWithEmailAndPassword(email, password).catch(err => alert("Sign-in failed: " + err.message));
     }
 
-    function showSignup() {
-      document.getElementById("companyName").style.display = "block";
-      document.getElementById("createBtn").style.display = "block";
-    }
-
     function signUp() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+      const email = document.getElementById("create-email").value;
+      const password = document.getElementById("create-password").value;
       if (!email || !password) return alert("Email and password required");
       auth.createUserWithEmailAndPassword(email, password)
-        .then(() => alert("Account created successfully! You are now signed in."))
-        .catch(err => alert("Sign-up failed: " + err.message));
+        .catch(err => alert("Create account failed: " + err.message));
     }
 
-    function signOut() { auth.signOut(); }
+    function signOut() {
+      auth.signOut();
+    }
 
     function customersRef() { return db.collection(`accounts/${currentAccountId}/customers`); }
 
@@ -218,8 +239,6 @@
         initMap(getSelectedFilters());
       });
     }
-
-    // (All other functions are unchanged from the working version - addCustomer, edit, save, delete, clearForm, isOverdue, filters, initMap, geocodeAddress)
 
     function addCustomer() {
       const nameVal = document.getElementById("name").value.trim();
