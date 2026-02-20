@@ -35,7 +35,6 @@
       <button onclick="showSignIn()" style="margin:10px 0;">Sign In</button>
       <button onclick="showCreateAccount()" style="margin:10px 0; background:#28a745;">Create Free Account</button>
 
-      <!-- Sign In Form -->
       <div id="signin-form" style="display:none;">
         <input id="signin-email" type="email" placeholder="Email">
         <input id="signin-password" type="password" placeholder="Password">
@@ -43,7 +42,6 @@
         <p><a href="#" onclick="showCreateAccount()">Don't have an account? Create one</a></p>
       </div>
 
-      <!-- Create Account Form -->
       <div id="create-form" style="display:none;">
         <input id="create-email" type="email" placeholder="Email">
         <input id="create-password" type="password" placeholder="Password">
@@ -156,12 +154,18 @@
       document.getElementById("auth-screen").style.display = "none";
       document.getElementById("map-screen").style.display = "flex";
       document.getElementById("pin-legend").style.display = "block";
+      enableAllInputs();
     }
 
     function showAuthScreen() {
       document.getElementById("auth-screen").style.display = "flex";
       document.getElementById("map-screen").style.display = "none";
       document.getElementById("pin-legend").style.display = "none";
+    }
+
+    function enableAllInputs() {
+      const inputs = document.querySelectorAll("#name, #address, #priority, #contactName, #phone, #emailContact, #notes, #lastVisit, #reminders, #addCustomerButton, #saveEditButton, #cancelEditButton, #filter, #search");
+      inputs.forEach(i => i.disabled = false);
     }
 
     function showSignIn() {
