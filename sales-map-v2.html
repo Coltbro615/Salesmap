@@ -14,14 +14,16 @@
     #map-screen { display: none; flex-direction: row; }
     #map { height: 100vh; width: 70%; position: relative; }
     #sidebar { height: 100vh; width: 30%; padding: 15px; background: #f0f0f0; overflow-y: auto; box-sizing: border-box; }
-    #customer-list { height: 380px; overflow-y: auto; background: white; border: 1px solid #ccc; }
+    #customer-list-container { width: 100%; background: #f0f0f0; padding: 10px; }
+    #customer-list { height: 400px; overflow-y: auto; }
     #customer-list ul { list-style: none; padding: 0; margin: 0; }
-    #customer-list li { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; }
+    #customer-list li { padding: 5px; cursor: pointer; }
     #customer-list li:hover { background: #ddd; }
-    input, textarea, select { width: 100%; margin: 6px 0; padding: 6px; }
-    #pin-legend { position: absolute; bottom: 20px; left: 20px; background: white; padding: 12px; border: 1px solid #ccc; font-size: 14px; z-index: 1001; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-    .legend-item { display: flex; align-items: center; margin: 6px 0; }
-    .legend-color { width: 22px; height: 22px; margin-right: 8px; border: 1px solid #999; }
+    input, textarea, select { width: 100%; margin: 5px 0; }
+    button { margin: 5px 0; }
+    #pin-legend { position: absolute; bottom: 50px; left: 20px; background: white; padding: 10px; border: 1px solid #ccc; font-size: 14px; z-index: 1001; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .legend-item { display: flex; align-items: center; margin: 5px 0; }
+    .legend-color { width: 20px; height: 20px; margin-right: 5px; }
   </style>
 </head>
 <body>
@@ -45,7 +47,7 @@
       <div id="create-form" style="display:none;">
         <input id="create-email" type="email" placeholder="Email">
         <input id="create-password" type="password" placeholder="Password">
-        <input id="companyName" placeholder="Company Name (required)" required>
+        <input id="companyName" placeholder="Company Name (required)">
         <button onclick="signUp()">Create My Account</button>
         <p><a href="#" onclick="showSignIn()">Already have an account? Sign In</a></p>
       </div>
@@ -108,6 +110,11 @@
       <h3>Search Customer</h3>
       <input id="search" placeholder="Search by name" disabled onkeyup="searchCustomers()">
     </div>
+
+    <div id="customer-list-container">
+      <h3>Customer List</h3>
+      <div id="customer-list"><ul id="customer-list-ul"></ul></div>
+    </div>
   </div>
 
   <div id="pin-legend" style="display:none;">
@@ -150,6 +157,9 @@
     let today = new Date();
     window.customers = [];
 
+    // Force manual login every time the page loads
+    auth.signOut();
+
     function showMapScreen() {
       document.getElementById("auth-screen").style.display = "none";
       document.getElementById("map-screen").style.display = "flex";
@@ -181,8 +191,10 @@
     auth.onAuthStateChanged(async (user) => {
       if (user) {
         currentAccountId = await getOrCreateAccount(user.uid, user.email);
-        loadCustomers();
-        showMapScreen();
+        if (currentAccountId) {
+          loadCustomers();
+          showMapScreen();
+        }
       } else {
         showAuthScreen();
       }
@@ -200,7 +212,7 @@
 
       const companyName = document.getElementById("companyName").value.trim();
       if (!companyName) {
-        alert("Company Name is required");
+        alert("Company Name is required when creating an account");
         return null;
       }
 
