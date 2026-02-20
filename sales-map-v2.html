@@ -339,6 +339,9 @@
       customersRef().onSnapshot(snapshot => {
         window.customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         initMap(getSelectedFilters());
+      }, (error) => {
+        console.error("Data load error:", error);
+        initMap(); // fallback so map still shows even if data fails
       });
     }
 
