@@ -6,116 +6,115 @@
   <title>Sales Map</title>
 
   <style>
-    html, body { 
-      margin: 0; 
-      font-family: Arial, sans-serif; 
-      height: 100%;
-      overflow: hidden; /* prevent page scroll breaking map */
-      background: #f8f9fa; 
-    }
+  html, body { 
+  margin: 0; 
+  font-family: Arial, sans-serif; 
+  height: 100%;
+  overflow-y: auto;   /* allow page scroll */
+  background: #f8f9fa; 
+}
 
-    #auth-screen { 
-      height: 100vh; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-    }
+#auth-screen { 
+  height: 100vh; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+}
 
-    .auth-box { 
-      background: white; 
-      padding: 40px; 
-      border-radius: 12px; 
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
-      width: 380px; 
-      text-align: center; 
-      max-width: 90%; 
-    }
+.auth-box { 
+  background: white; 
+  padding: 40px; 
+  border-radius: 12px; 
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+  width: 380px; 
+  text-align: center; 
+  max-width: 90%; 
+}
 
-    input, button, select, textarea { 
-      width: 100%; 
-      padding: 12px; 
-      margin: 8px 0; 
-      border-radius: 8px; 
-      border: 1px solid #ccc; 
-      font-size: 15px; 
-      box-sizing: border-box; 
-    }
+input, button, select, textarea { 
+  width: 100%; 
+  padding: 12px; 
+  margin: 8px 0; 
+  border-radius: 8px; 
+  border: 1px solid #ccc; 
+  font-size: 15px; 
+  box-sizing: border-box; 
+}
 
-    button { 
-      background: #007bff; 
-      color: white; 
-      border: none; 
-      cursor: pointer; 
-      font-weight: bold; 
-    }
+button { 
+  background: #007bff; 
+  color: white; 
+  border: none; 
+  cursor: pointer; 
+  font-weight: bold; 
+}
 
-    button:hover { background: #0056b3; }
+button:hover { background: #0056b3; }
 
-    #map-screen { 
-      display: none; 
-      flex-direction: column; 
-      height: 100vh; /* LOCK whole app */
-    }
+/* MAIN MAP SCREEN */
+#map-screen { 
+  display: none; 
+  flex-direction: column; 
+}
 
-    #top-section { 
-      display: flex; 
-      height: 65vh; /* map + sidebar locked together */
-      min-height: 0;
-    }
+/* FULL SCREEN MAP AREA */
+#top-section { 
+  display: flex; 
+  height: 100vh;   /* fill full screen */
+  min-height: 600px; /* prevents collapse on small screens */
+}
 
-    #map { 
-      height: 100%; 
-      width: 70%; 
-      position: relative; 
-    }
+/* MAP */
+#map { 
+  height: 100%; 
+  width: 70%; 
+  position: relative; 
+}
 
-    #sidebar { 
-      height: 100%; 
-      width: 30%; 
-      padding: 15px; 
-      background: #f0f0f0; 
-      overflow-y: auto; /* sidebar scrolls only */
-      box-sizing: border-box; 
-    }
+/* SIDEBAR */
+#sidebar { 
+  height: 100%; 
+  width: 30%; 
+  padding: 15px; 
+  background: #f0f0f0; 
+  overflow-y: auto; 
+  box-sizing: border-box; 
+}
 
-    /* FIXED: removed 840px */
-    #customer-list-container { 
-      flex: 1;                 /* takes remaining space */
-      min-height: 0;
-      background: #f0f0f0; 
-      padding: 15px; 
-      border-top: 3px solid #ccc; 
-      display: flex;
-      flex-direction: column;
-    }
+/* CUSTOMER LIST BELOW MAP */
+#customer-list-container { 
+  background: #f0f0f0; 
+  padding: 15px; 
+  border-top: 3px solid #ccc; 
+}
 
-    #customer-list { 
-      flex: 1;
-      overflow-y: auto; 
-      background: white; 
-      border: 1px solid #ccc; 
-      border-radius: 8px; 
-    }
+#customer-list { 
+  max-height: 800px; /* scrolls if very long */
+  overflow-y: auto; 
+  background: white; 
+  border: 1px solid #ccc; 
+  border-radius: 8px; 
+}
 
-    #customer-list ul { list-style: none; padding: 0; margin: 0; }
-    #customer-list li { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; }
-    #customer-list li:hover { background: #f0f0f0; }
+#customer-list ul { list-style: none; padding: 0; margin: 0; }
+#customer-list li { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; }
+#customer-list li:hover { background: #f0f0f0; }
 
-    #pin-legend { 
-      position: absolute; 
-      bottom: 20px; 
-      left: 20px; 
-      background: white; 
-      padding: 12px; 
-      border: 1px solid #ccc; 
-      border-radius: 8px; 
-      font-size: 14px; 
-      z-index: 1001; 
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2); 
-    }
+#pin-legend { 
+  position: absolute; 
+  bottom: 20px; 
+  left: 20px; 
+  background: white; 
+  padding: 12px; 
+  border: 1px solid #ccc; 
+  border-radius: 8px; 
+  font-size: 14px; 
+  z-index: 1001; 
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2); 
+}
 
-    .legend-item { display: flex; align-items: center; margin: 6px 0; }
-    .legend-color { width: 22px; height: 22px; margin-right: 8px; border: 1px solid #999; border-radius: 4px; }
+.legend-item { display: flex; align-items: center; margin: 6px 0; }
+.legend-color { width: 22px; height: 22px; margin-right: 8px; border: 1px solid #999; border-radius: 4px; }
   </style>
 </head>
 <body>
