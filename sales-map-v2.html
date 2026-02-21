@@ -4,20 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sales Map</title>
+
   <style>
-    body { 
+    html, body { 
       margin: 0; 
       font-family: Arial, sans-serif; 
-      height: auto; 
-      overflow-y: auto; 
+      height: 100%;
+      overflow: hidden; /* prevent page scroll breaking map */
       background: #f8f9fa; 
     }
+
     #auth-screen { 
       height: 100vh; 
       display: flex; 
       align-items: center; 
       justify-content: center; 
     }
+
     .auth-box { 
       background: white; 
       padding: 40px; 
@@ -27,6 +30,7 @@
       text-align: center; 
       max-width: 90%; 
     }
+
     input, button, select, textarea { 
       width: 100%; 
       padding: 12px; 
@@ -36,49 +40,67 @@
       font-size: 15px; 
       box-sizing: border-box; 
     }
-    button { background: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
+
+    button { 
+      background: #007bff; 
+      color: white; 
+      border: none; 
+      cursor: pointer; 
+      font-weight: bold; 
+    }
+
     button:hover { background: #0056b3; }
+
     #map-screen { 
       display: none; 
       flex-direction: column; 
-      min-height: 100vh; 
+      height: 100vh; /* LOCK whole app */
     }
+
     #top-section { 
       display: flex; 
-      flex: 1; 
-      min-height: 0; 
-      height: 65vh; /* map + sidebar locked together at this height */
+      height: 65vh; /* map + sidebar locked together */
+      min-height: 0;
     }
+
     #map { 
       height: 100%; 
       width: 70%; 
       position: relative; 
     }
+
     #sidebar { 
       height: 100%; 
       width: 30%; 
       padding: 15px; 
       background: #f0f0f0; 
-      overflow-y: auto; /* sidebar scrolls if content is long */
+      overflow-y: auto; /* sidebar scrolls only */
       box-sizing: border-box; 
     }
+
+    /* FIXED: removed 840px */
     #customer-list-container { 
+      flex: 1;                 /* takes remaining space */
+      min-height: 0;
       background: #f0f0f0; 
       padding: 15px; 
       border-top: 3px solid #ccc; 
-      flex-shrink: 0;
-      height: 840px; /* tall customer list below - scroll down to see full */
+      display: flex;
+      flex-direction: column;
     }
+
     #customer-list { 
-      height: 100%; 
+      flex: 1;
       overflow-y: auto; 
       background: white; 
       border: 1px solid #ccc; 
       border-radius: 8px; 
     }
+
     #customer-list ul { list-style: none; padding: 0; margin: 0; }
     #customer-list li { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; }
     #customer-list li:hover { background: #f0f0f0; }
+
     #pin-legend { 
       position: absolute; 
       bottom: 20px; 
@@ -91,6 +113,7 @@
       z-index: 1001; 
       box-shadow: 0 2px 8px rgba(0,0,0,0.2); 
     }
+
     .legend-item { display: flex; align-items: center; margin: 6px 0; }
     .legend-color { width: 22px; height: 22px; margin-right: 8px; border: 1px solid #999; border-radius: 4px; }
   </style>
