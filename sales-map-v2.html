@@ -5,28 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sales Map</title>
   <style>
-    body { 
-      margin: 0; 
-      font-family: Arial, sans-serif; 
-      height: auto; 
-      overflow-y: auto; 
-      background: #f8f9fa; 
-    }
-    #auth-screen { 
-      height: 100vh; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-    }
-    .auth-box { 
-      background: white; 
-      padding: 40px; 
-      border-radius: 12px; 
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
-      width: 380px; 
-      text-align: center; 
-      max-width: 90%; 
-    }
+    body { margin: 0; font-family: Arial, sans-serif; height: 100vh; overflow: hidden; background: #f8f9fa; }
+    #auth-screen, #map-screen { height: 100vh; width: 100%; }
+    #auth-screen { display: flex; align-items: center; justify-content: center; }
+    .auth-box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 380px; text-align: center; }
     input, button, select, textarea {
       width: 100%;
       padding: 12px;
@@ -38,16 +20,8 @@
     }
     button { background: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
     button:hover { background: #0056b3; }
-    #map-screen { 
-      display: none; 
-      flex-direction: column; 
-      min-height: 100vh; 
-    }
-    #main-container { 
-      display: flex; 
-      flex: 1; 
-      min-height: 0; 
-    }
+    #map-screen { display: none; flex-direction: column; height: 100vh; }
+    #main-container { display: flex; flex: 1; min-height: 0; }
     #map { height: 100%; width: 70%; position: relative; }
     #sidebar {
       height: 100%;
@@ -63,7 +37,7 @@
       padding: 10px;
       border-top: 2px solid #ccc;
       flex-shrink: 0;
-      height: 320px; /* small on load - scroll down to see full list */
+      height: 280px; /* SMALL on load - scroll down to see full list */
     }
     #customer-list { height: 100%; overflow-y: auto; background: white; border: 1px solid #ccc; border-radius: 8px; }
     #customer-list ul { list-style: none; padding: 0; margin: 0; }
@@ -165,7 +139,6 @@
         <input id="search" placeholder="Search by name" disabled onkeyup="searchCustomers()">
       </div>
     </div>
-
     <!-- CUSTOMER LIST AT BOTTOM - SMALL ON LOAD -->
     <div id="customer-list-container">
       <h3>Customer List</h3>
