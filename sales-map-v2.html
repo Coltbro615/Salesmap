@@ -47,6 +47,7 @@
       display: flex; 
       flex: 1; 
       min-height: 0; 
+      height: 65vh; /* map + sidebar locked together at this height */
     }
     #map { 
       height: 100%; 
@@ -58,7 +59,7 @@
       width: 30%; 
       padding: 15px; 
       background: #f0f0f0; 
-      overflow-y: auto; 
+      overflow-y: auto; /* sidebar scrolls if content is long */
       box-sizing: border-box; 
     }
     #customer-list-container { 
@@ -66,7 +67,7 @@
       padding: 15px; 
       border-top: 3px solid #ccc; 
       flex-shrink: 0;
-      height: 840px; /* tall customer list below */
+      height: 840px; /* tall customer list below - scroll down to see full */
     }
     #customer-list { 
       height: 100%; 
@@ -181,7 +182,7 @@
       </div>
     </div>
 
-    <!-- CUSTOMER LIST COMPLETELY SEPARATE BELOW THE MAP -->
+    <!-- CUSTOMER LIST COMPLETELY SEPARATE BELOW -->
     <div id="customer-list-container">
       <h3>Customer List</h3>
       <div id="customer-list"><ul id="customer-list-ul"></ul></div>
@@ -247,6 +248,10 @@
       setTimeout(() => {
         if (map) google.maps.event.trigger(map, 'resize');
       }, 900);
+
+      setTimeout(() => {
+        if (map) google.maps.event.trigger(map, 'resize');
+      }, 1500);
     }
 
     function showAuthScreen() {
