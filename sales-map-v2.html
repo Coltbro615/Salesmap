@@ -66,7 +66,6 @@
     #map { 
       height: 100%; 
       width: 70%; 
-      position: relative; 
     }
 
     #sidebar { 
@@ -97,7 +96,7 @@
     #customer-list li { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; }
     #customer-list li:hover { background: #f0f0f0; }
 
-    /* 🔥 FIXED LEGEND */
+    /* FIXED LEGEND */
     #pin-legend { 
       position: fixed;
       bottom: 20px; 
@@ -122,8 +121,6 @@
   <div id="auth-screen">
     <div class="auth-box">
       <h1>Sales Map</h1>
-      <p>Simple field sales mapping for teams</p>
-
       <button onclick="showSignIn()">Sign In</button>
       <button onclick="showCreateAccount()" style="background:#28a745;">Create Free Account</button>
 
@@ -155,19 +152,19 @@
         <input id="name" placeholder="Customer Name" disabled>
         <input id="address" placeholder="Customer Address" disabled>
         <select id="priority" disabled>
-          <option value="urgent">Hotlist (Blue)</option>
-          <option value="high">High Priority (Green)</option>
-          <option value="medium">Medium Priority (Yellow)</option>
-          <option value="low">Low Priority (Red)</option>
-          <option value="never">New Visit (Orange)</option>
-          <option value="no">No Visit (Purple)</option>
-          <option value="ucc">UCC (Light Blue)</option>
+          <option value="urgent">Hotlist</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+          <option value="never">New</option>
+          <option value="no">No Visit</option>
+          <option value="ucc">UCC</option>
         </select>
 
         <input id="contactName" placeholder="Contact Name" disabled>
         <input id="phone" type="tel" placeholder="Phone Number" disabled>
         <input id="emailContact" type="email" placeholder="Email Address" disabled>
-        <textarea id="notes" placeholder="Additional Notes" disabled></textarea>
+        <textarea id="notes" placeholder="Notes" disabled></textarea>
         <input id="lastVisit" type="date" disabled>
 
         <button id="addCustomerButton" onclick="addCustomer()" disabled>Add Customer</button>
@@ -197,64 +194,77 @@
     <div class="legend-item"><div class="legend-color" style="background:pink;"></div>Overdue</div>
   </div>
 
-<script>
-let editingId = null;
-
-function cancelEdit() {
-  editingId = null;
-
-  document.getElementById("name").value = "";
-  document.getElementById("address").value = "";
-  document.getElementById("priority").value = "urgent";
-  document.getElementById("contactName").value = "";
-  document.getElementById("phone").value = "";
-  document.getElementById("emailContact").value = "";
-  document.getElementById("notes").value = "";
-  document.getElementById("lastVisit").value = "";
-
-  document.getElementById("saveEditButton").style.display = "none";
-  document.getElementById("addCustomerButton").style.display = "block";
-  document.getElementById("cancelEditButton").style.display = "none";
-}
-</script>
-
-</body>
-</html>
-
-  <!-- Firebase SDKs -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
   <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyA1aUdvuhzMqJAKGNy0ttDVS-QZNib30ZY",
-      authDomain: "sales-map-ac968.firebaseapp.com",
-      projectId: "sales-map-ac968",
-      storageBucket: "sales-map-ac968.firebasestorage.app",
-      messagingSenderId: "758371444111",
-      appId: "1:758371444111:web:a5f0f425522e1bf536d7fa"
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_BUCKET",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    let currentAccountId = null;
-    let editingId = null;
-    let map = null;
+    let map;
     let markers = [];
-    let currentInfoWindow = null;
-    let geocoder;
-    let today = new Date();
-    window.customers = [];
+    let editingId = null;
 
-    auth.signOut(); // force manual login every time
+    function showSignIn(){
+      document.getElementById("signin-form").style.display="block";
+      document.getElementById("create-form").style.display="none";
+    }
 
-    function showMapScreen() {
-      document.getElementById("auth-screen").style.display = "none";
-      document.getElementById("map-screen").style.display = "flex";
-      document.getElementById("pin-legend").style.display = "block";
+    function showCreateAccount(){
+      document.getElementById("signin-form").style.display="none";
+      document.getElementById("create-form").style.display="block";
+    }
+
+    function showMapScreen(){
+      document.getElementById("auth-screen").style.display="none";
+      document.getElementById("map-screen").style.display="flex";
+      document.getElementById("pin-legend").style.display="block";
+
+      setTimeout(()=>{ google.maps.event.trigger(map,"resize"); },400);
+    }
+
+    function cancelEdit(){
+      editingId=null;
+      document.getElementById("name").value="";
+      document.getElementById("address").value="";
+      document.getElementById("priority").value="urgent";
+      document.getElementById("contactName").value="";
+      document.getElementById("phone").value="";
+      document.getElementById("emailContact").value="";
+      document.getElementById("notes").value="";
+      document.getElementById("lastVisit").value="";
+      document.getElementById("saveEditButton").style.display="none";
+      document.getElementById("addCustomerButton").style.display="block";
+      document.getElementById("cancelEditButton").style.display="none";
+    }
+
+    function initMap(){
+      map=new google.maps.Map(document.getElementById("map"),{
+        zoom:7,
+        center:{lat:35.7796,lng:-78.6382}
+      });
+    }
+
+    window.initMap=initMap;
+
+    window.addEventListener("load",()=>{
+      const script=document.createElement("script");
+      script.src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_KEY&callback=initMap";
+      script.async=true;
+      document.head.appendChild(script);
+    });
       enableAllInputs();
 
       setTimeout(() => {
