@@ -47,7 +47,7 @@
       display: flex; 
       flex: 1; 
       min-height: 0; 
-      height: 65vh; 
+      height: 65vh; /* locked height - map and sidebar always same size */
     }
     #map { 
       height: 100%; 
@@ -59,10 +59,10 @@
       width: 30%; 
       padding: 15px; 
       background: #f0f0f0; 
-      overflow-y: auto; 
+      overflow-y: auto; /* scrolls inside if form is long */
       box-sizing: border-box; 
     }
-    #form-wrapper { display: none; } /* hidden by default */
+    #form-wrapper { display: none; } /* form hidden by default */
     #customer-list-container { 
       background: #f0f0f0; 
       padding: 15px; 
@@ -335,7 +335,7 @@
     }
 
     function showAddForm() {
-      hideForm(); // reset first
+      hideForm();
       document.getElementById("form-wrapper").style.display = "block";
       document.getElementById("addCustomerButton").style.display = "block";
       document.getElementById("saveEditButton").style.display = "none";
