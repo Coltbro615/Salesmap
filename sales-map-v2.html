@@ -5,42 +5,91 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sales Map</title>
   <style>
-    body { margin: 0; font-family: Arial, sans-serif; height: 100vh; overflow: hidden; background: #f8f9fa; }
-    #auth-screen, #map-screen { height: 100vh; width: 100%; }
-    #auth-screen { display: flex; align-items: center; justify-content: center; }
-    .auth-box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 380px; text-align: center; }
-    input, button, select, textarea {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 15px;
-      box-sizing: border-box;
+    body { 
+      margin: 0; 
+      font-family: Arial, sans-serif; 
+      height: auto; 
+      overflow-y: auto; 
+      background: #f8f9fa; 
+    }
+    #auth-screen { 
+      height: 100vh; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+    }
+    .auth-box { 
+      background: white; 
+      padding: 40px; 
+      border-radius: 12px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+      width: 380px; 
+      text-align: center; 
+      max-width: 90%; 
+    }
+    input, button, select, textarea { 
+      width: 100%; 
+      padding: 12px; 
+      margin: 8px 0; 
+      border-radius: 8px; 
+      border: 1px solid #ccc; 
+      font-size: 15px; 
+      box-sizing: border-box; 
     }
     button { background: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
     button:hover { background: #0056b3; }
-    #map-screen { display: none; flex-direction: row; height: 100vh; }
-    #map { height: 100%; width: 70%; position: relative; }
-    #sidebar {
-      height: 100%;
-      width: 30%;
-      padding: 15px;
-      background: #f0f0f0;
-      overflow-y: auto;
-      box-sizing: border-box;
+    #map-screen { 
+      display: none; 
+      flex-direction: column; 
+      min-height: 100vh; 
     }
-    #pin-legend {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      background: white;
-      padding: 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 14px;
-      z-index: 1001;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    #top-section { 
+      display: flex; 
+      flex: 1; 
+      min-height: 0; 
+      height: 65vh; /* map + sidebar fill most of screen */
+    }
+    #map { 
+      height: 100%; 
+      width: 70%; 
+      position: relative; 
+    }
+    #sidebar { 
+      height: 100%; 
+      width: 30%; 
+      padding: 15px; 
+      background: #f0f0f0; 
+      overflow-y: auto; 
+      box-sizing: border-box; 
+    }
+    #customer-list-container { 
+      background: #f0f0f0; 
+      padding: 15px; 
+      border-top: 3px solid #ccc; 
+      flex-shrink: 0;
+      height: 840px; /* tall customer list below - scroll down to see full */
+    }
+    #customer-list { 
+      height: 100%; 
+      overflow-y: auto; 
+      background: white; 
+      border: 1px solid #ccc; 
+      border-radius: 8px; 
+    }
+    #customer-list ul { list-style: none; padding: 0; margin: 0; }
+    #customer-list li { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; }
+    #customer-list li:hover { background: #f0f0f0; }
+    #pin-legend { 
+      position: absolute; 
+      bottom: 20px; 
+      left: 20px; 
+      background: white; 
+      padding: 12px; 
+      border: 1px solid #ccc; 
+      border-radius: 8px; 
+      font-size: 14px; 
+      z-index: 1001; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2); 
     }
     .legend-item { display: flex; align-items: center; margin: 6px 0; }
     .legend-color { width: 22px; height: 22px; margin-right: 8px; border: 1px solid #999; border-radius: 4px; }
@@ -53,14 +102,17 @@
     <div class="auth-box">
       <h1>Sales Map</h1>
       <p>Simple field sales mapping for teams</p>
+
       <button onclick="showSignIn()" style="margin:10px 0;">Sign In</button>
       <button onclick="showCreateAccount()" style="margin:10px 0; background:#28a745;">Create Free Account</button>
+
       <div id="signin-form" style="display:none;">
         <input id="signin-email" type="email" placeholder="Email">
         <input id="signin-password" type="password" placeholder="Password">
         <button onclick="signIn()">Sign In</button>
         <p><a href="#" onclick="showCreateAccount()">Don't have an account? Create one</a></p>
       </div>
+
       <div id="create-form" style="display:none;">
         <input id="create-email" type="email" placeholder="Email">
         <input id="create-password" type="password" placeholder="Password">
@@ -71,61 +123,69 @@
     </div>
   </div>
 
-  <!-- MAIN MAP SCREEN - BIG MAP ON SIGN-IN -->
+  <!-- MAIN MAP SCREEN -->
   <div id="map-screen">
-    <div id="map"></div>
-    <div id="sidebar">
-      <div id="auth-container">
-        <h2 id="companyHeader">Sales Map</h2>
-        <button onclick="signOut()" id="signOutButton">Sign Out</button>
-      </div>
+    <div id="top-section">
+      <div id="map"></div>
+      <div id="sidebar">
+        <div id="auth-container">
+          <h2 id="companyHeader">Sales Map</h2>
+          <button onclick="signOut()" id="signOutButton">Sign Out</button>
+        </div>
 
-      <h2>Add/Edit Customer</h2>
-      <input id="name" placeholder="Customer Name" disabled>
-      <input id="address" placeholder="Customer Address" disabled>
-      <select id="priority" disabled>
-        <option value="urgent">Hotlist (Blue)</option>
-        <option value="high">High Priority (Green)</option>
-        <option value="medium">Medium Priority (Yellow)</option>
-        <option value="low">Low Priority (Red)</option>
-        <option value="never">New Visit (Orange)</option>
-        <option value="no">No Visit (Purple)</option>
-        <option value="ucc">UCC (Light Blue)</option>
-      </select>
-      <div id="notes-section">
-        <input id="contactName" placeholder="Contact Name" disabled>
-        <input id="phone" type="tel" placeholder="Phone Number" disabled>
-        <input id="emailContact" type="email" placeholder="Email Address" disabled>
-        <textarea id="notes" placeholder="Additional Notes" disabled></textarea>
-      </div>
-      <input id="lastVisit" type="date" disabled>
-      <select id="reminders" multiple disabled>
-        <option value="never">Never</option>
-        <option value="1 month">1 Month</option>
-        <option value="2 months">2 Months</option>
-        <option value="3 months">3 Months</option>
-        <option value="4 months">4 Months</option>
-        <option value="6 months">6 Months</option>
-        <option value="12 months">12 Months</option>
-      </select>
-      <button id="addCustomerButton" onclick="addCustomer()" disabled>Add Customer</button>
-      <button id="saveEditButton" onclick="saveEditedCustomer()" style="display: none;" disabled>Save Changes</button>
-      <button id="cancelEditButton" onclick="cancelEdit()" style="display: none;">Cancel</button>
+        <h2>Add/Edit Customer</h2>
+        <input id="name" placeholder="Customer Name" disabled>
+        <input id="address" placeholder="Customer Address" disabled>
+        <select id="priority" disabled>
+          <option value="urgent">Hotlist (Blue)</option>
+          <option value="high">High Priority (Green)</option>
+          <option value="medium">Medium Priority (Yellow)</option>
+          <option value="low">Low Priority (Red)</option>
+          <option value="never">New Visit (Orange)</option>
+          <option value="no">No Visit (Purple)</option>
+          <option value="ucc">UCC (Light Blue)</option>
+        </select>
+        <div id="notes-section">
+          <input id="contactName" placeholder="Contact Name" disabled>
+          <input id="phone" type="tel" placeholder="Phone Number" disabled>
+          <input id="emailContact" type="email" placeholder="Email Address" disabled>
+          <textarea id="notes" placeholder="Additional Notes" disabled></textarea>
+        </div>
+        <input id="lastVisit" type="date" disabled>
+        <select id="reminders" multiple disabled>
+          <option value="never">Never</option>
+          <option value="1 month">1 Month</option>
+          <option value="2 months">2 Months</option>
+          <option value="3 months">3 Months</option>
+          <option value="4 months">4 Months</option>
+          <option value="6 months">6 Months</option>
+          <option value="12 months">12 Months</option>
+        </select>
+        <button id="addCustomerButton" onclick="addCustomer()" disabled>Add Customer</button>
+        <button id="saveEditButton" onclick="saveEditedCustomer()" style="display: none;" disabled>Save Changes</button>
+        <button id="cancelEditButton" onclick="cancelEdit()" style="display: none;">Cancel</button>
 
-      <h3>Filter by Priority</h3>
-      <select id="filter" multiple onchange="applyFilter()" disabled>
-        <option value="all">All</option>
-        <option value="urgent">Hotlist (Blue)</option>
-        <option value="high">High (Green)</option>
-        <option value="medium">Medium (Yellow)</option>
-        <option value="low">Low (Red)</option>
-        <option value="never">New Visit (Orange)</option>
-        <option value="no">No Visit (Purple)</option>
-        <option value="ucc">UCC (Light Blue)</option>
-        <option value="overdue">Overdue (Pink)</option>
-      </select>
-      <h3>Search Customer</h3>
-      <input id="search" placeholder="Search by name" disabled onkeyup="searchCustomers()">
+        <h3>Filter by Priority</h3>
+        <select id="filter" multiple onchange="applyFilter()" disabled>
+          <option value="all">All</option>
+          <option value="urgent">Hotlist (Blue)</option>
+          <option value="high">High (Green)</option>
+          <option value="medium">Medium (Yellow)</option>
+          <option value="low">Low (Red)</option>
+          <option value="never">New Visit (Orange)</option>
+          <option value="no">No Visit (Purple)</option>
+          <option value="ucc">UCC (Light Blue)</option>
+          <option value="overdue">Overdue (Pink)</option>
+        </select>
+        <h3>Search Customer</h3>
+        <input id="search" placeholder="Search by name" disabled onkeyup="searchCustomers()">
+      </div>
+    </div>
+
+    <!-- CUSTOMER LIST COMPLETELY SEPARATE BELOW THE MAP -->
+    <div id="customer-list-container">
+      <h3>Customer List</h3>
+      <div id="customer-list"><ul id="customer-list-ul"></ul></div>
     </div>
   </div>
 
@@ -404,6 +464,21 @@
         const matchFilter = filters.includes("all") || filters.includes(c.priority) || (filters.includes("overdue") && overdue);
         const matchSearch = !search || c.name.toLowerCase().includes(search);
         return matchFilter && matchSearch;
+      });
+
+      const ul = document.getElementById("customer-list-ul");
+      ul.innerHTML = "";
+      filtered.sort((a,b) => a.name.localeCompare(b.name)).forEach(c => {
+        const li = document.createElement("li");
+        li.textContent = c.name;
+        li.className = `priority-${isOverdue(c) ? "overdue" : c.priority}`;
+        li.onclick = () => {
+          map.setCenter({lat: c.lat, lng: c.lng});
+          map.setZoom(15);
+          const marker = markers.find(m => m.customerId === c.id);
+          if (marker) marker.infoWindow.open(map, marker);
+        };
+        ul.appendChild(li);
       });
 
       filtered.forEach(c => {
