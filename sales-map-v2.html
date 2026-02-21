@@ -47,7 +47,7 @@
       display: flex; 
       flex: 1; 
       min-height: 0; 
-      height: 65vh; /* locked height - map and sidebar always same size */
+      height: 65vh; /* map + sidebar locked together at this height */
     }
     #map { 
       height: 100%; 
@@ -59,16 +59,15 @@
       width: 30%; 
       padding: 15px; 
       background: #f0f0f0; 
-      overflow-y: auto; /* scrolls inside if form is long */
+      overflow-y: auto; /* sidebar scrolls if content is long */
       box-sizing: border-box; 
     }
-    #form-wrapper { display: none; } /* form hidden by default */
     #customer-list-container { 
       background: #f0f0f0; 
       padding: 15px; 
       border-top: 3px solid #ccc; 
       flex-shrink: 0;
-      height: 840px; 
+      height: 840px; /* tall customer list below - scroll down to see full */
     }
     #customer-list { 
       height: 100%; 
@@ -134,45 +133,56 @@
           <button onclick="signOut()" id="signOutButton">Sign Out</button>
         </div>
 
-        <button onclick="showAddForm()" style="width:100%; padding:15px; font-size:18px; margin:15px 0;">➕ Add New Customer</button>
-
-        <div id="form-wrapper">
-          <h2>Add/Edit Customer</h2>
-          <input id="name" placeholder="Customer Name">
-          <input id="address" placeholder="Customer Address">
-          <select id="priority">
-            <option value="urgent">Hotlist (Blue)</option>
-            <option value="high">High Priority (Green)</option>
-            <option value="medium">Medium Priority (Yellow)</option>
-            <option value="low">Low Priority (Red)</option>
-            <option value="never">New Visit (Orange)</option>
-            <option value="no">No Visit (Purple)</option>
-            <option value="ucc">UCC (Light Blue)</option>
-          </select>
-          <div id="notes-section">
-            <input id="contactName" placeholder="Contact Name">
-            <input id="phone" type="tel" placeholder="Phone Number">
-            <input id="emailContact" type="email" placeholder="Email Address">
-            <textarea id="notes" placeholder="Additional Notes"></textarea>
-          </div>
-          <input id="lastVisit" type="date">
-          <select id="reminders" multiple>
-            <option value="never">Never</option>
-            <option value="1 month">1 Month</option>
-            <option value="2 months">2 Months</option>
-            <option value="3 months">3 Months</option>
-            <option value="4 months">4 Months</option>
-            <option value="6 months">6 Months</option>
-            <option value="12 months">12 Months</option>
-          </select>
-          <button id="addCustomerButton" onclick="addCustomer()">Add Customer</button>
-          <button id="saveEditButton" onclick="saveEditedCustomer()" style="display:none;">Save Changes</button>
-          <button onclick="hideForm()">Cancel</button>
+        <h2>Add/Edit Customer</h2>
+        <input id="name" placeholder="Customer Name" disabled>
+        <input id="address" placeholder="Customer Address" disabled>
+        <select id="priority" disabled>
+          <option value="urgent">Hotlist (Blue)</option>
+          <option value="high">High Priority (Green)</option>
+          <option value="medium">Medium Priority (Yellow)</option>
+          <option value="low">Low Priority (Red)</option>
+          <option value="never">New Visit (Orange)</option>
+          <option value="no">No Visit (Purple)</option>
+          <option value="ucc">UCC (Light Blue)</option>
+        </select>
+        <div id="notes-section">
+          <input id="contactName" placeholder="Contact Name" disabled>
+          <input id="phone" type="tel" placeholder="Phone Number" disabled>
+          <input id="emailContact" type="email" placeholder="Email Address" disabled>
+          <textarea id="notes" placeholder="Additional Notes" disabled></textarea>
         </div>
+        <input id="lastVisit" type="date" disabled>
+        <select id="reminders" multiple disabled>
+          <option value="never">Never</option>
+          <option value="1 month">1 Month</option>
+          <option value="2 months">2 Months</option>
+          <option value="3 months">3 Months</option>
+          <option value="4 months">4 Months</option>
+          <option value="6 months">6 Months</option>
+          <option value="12 months">12 Months</option>
+        </select>
+        <button id="addCustomerButton" onclick="addCustomer()" disabled>Add Customer</button>
+        <button id="saveEditButton" onclick="saveEditedCustomer()" style="display: none;" disabled>Save Changes</button>
+        <button id="cancelEditButton" onclick="cancelEdit()" style="display: none;">Cancel</button>
+
+        <h3>Filter by Priority</h3>
+        <select id="filter" multiple onchange="applyFilter()" disabled>
+          <option value="all">All</option>
+          <option value="urgent">Hotlist (Blue)</option>
+          <option value="high">High (Green)</option>
+          <option value="medium">Medium (Yellow)</option>
+          <option value="low">Low (Red)</option>
+          <option value="never">New Visit (Orange)</option>
+          <option value="no">No Visit (Purple)</option>
+          <option value="ucc">UCC (Light Blue)</option>
+          <option value="overdue">Overdue (Pink)</option>
+        </select>
+        <h3>Search Customer</h3>
+        <input id="search" placeholder="Search by name" disabled onkeyup="searchCustomers()">
       </div>
     </div>
 
-    <!-- CUSTOMER LIST BELOW -->
+    <!-- CUSTOMER LIST COMPLETELY SEPARATE BELOW -->
     <div id="customer-list-container">
       <h3>Customer List</h3>
       <div id="customer-list"><ul id="customer-list-ul"></ul></div>
@@ -226,7 +236,6 @@
       document.getElementById("map-screen").style.display = "flex";
       document.getElementById("pin-legend").style.display = "block";
       enableAllInputs();
-      hideForm(); // form hidden on sign-in
 
       setTimeout(() => {
         const mapDiv = document.getElementById("map");
@@ -334,19 +343,6 @@
       });
     }
 
-    function showAddForm() {
-      hideForm();
-      document.getElementById("form-wrapper").style.display = "block";
-      document.getElementById("addCustomerButton").style.display = "block";
-      document.getElementById("saveEditButton").style.display = "none";
-      editingId = null;
-    }
-
-    function hideForm() {
-      document.getElementById("form-wrapper").style.display = "none";
-      clearForm();
-    }
-
     function addCustomer() {
       const nameVal = document.getElementById("name").value.trim();
       const addressVal = document.getElementById("address").value.trim();
@@ -368,7 +364,7 @@
             reminders: Array.from(document.getElementById("reminders").selectedOptions).map(o => o.value),
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
           });
-          hideForm();
+          clearForm();
         }
       });
     }
@@ -388,9 +384,9 @@
       Array.from(remSel.options).forEach(opt => opt.selected = (customer.reminders || []).includes(opt.value));
 
       editingId = id;
-      document.getElementById("form-wrapper").style.display = "block";
-      document.getElementById("addCustomerButton").style.display = "none";
       document.getElementById("saveEditButton").style.display = "block";
+      document.getElementById("addCustomerButton").style.display = "none";
+      document.getElementById("cancelEditButton").style.display = "inline-block";
     }
 
     function saveEditedCustomer() {
@@ -414,7 +410,7 @@
             lastVisit: document.getElementById("lastVisit").value || "",
             reminders: Array.from(document.getElementById("reminders").selectedOptions).map(o => o.value)
           });
-          hideForm();
+          clearForm();
         }
       });
     }
@@ -434,6 +430,9 @@
       document.getElementById("lastVisit").value = "";
       document.getElementById("reminders").selectedIndex = -1;
       editingId = null;
+      document.getElementById("saveEditButton").style.display = "none";
+      document.getElementById("addCustomerButton").style.display = "block";
+      document.getElementById("cancelEditButton").style.display = "none";
     }
 
     function isOverdue(customer) {
