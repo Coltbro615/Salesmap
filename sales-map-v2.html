@@ -2,31 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sales Map</title>
   <style>
-    body { 
-      margin: 0; 
-      font-family: Arial, sans-serif; 
-      height: auto; 
-      overflow-y: auto; 
-      background: #f8f9fa; 
-    }
-    #auth-screen { 
-      height: 100vh; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-    }
-    .auth-box { 
-      background: white; 
-      padding: 40px; 
-      border-radius: 12px; 
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
-      width: 380px; 
-      text-align: center; 
-      max-width: 90%; 
-    }
+    body { margin: 0; font-family: Arial, sans-serif; height: 100vh; overflow: hidden; background: #f8f9fa; }
+    #auth-screen, #map-screen { height: 100vh; width: 100%; }
+    #auth-screen { display: flex; align-items: center; justify-content: center; }
+    .auth-box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 380px; text-align: center; }
     input, button, select, textarea { 
       width: 100%; 
       padding: 12px; 
@@ -38,21 +19,9 @@
     }
     button { background: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
     button:hover { background: #0056b3; }
-    #map-screen { 
-      display: none; 
-      flex-direction: column; 
-      min-height: 100vh; 
-    }
-    #main-container { 
-      display: flex; 
-      flex: 1; 
-      min-height: 0; 
-    }
-    #map { 
-      height: 100%; 
-      width: 70%; 
-      position: relative; 
-    }
+    #map-screen { display: none; flex-direction: column; height: 100vh; }
+    #main-container { display: flex; flex: 1; min-height: 0; }
+    #map { height: 100%; width: 70%; position: relative; }
     #sidebar { 
       height: 100%; 
       width: 30%; 
@@ -60,21 +29,16 @@
       background: #f0f0f0; 
       overflow-y: auto; 
       box-sizing: border-box; 
+      min-height: 0;
     }
     #customer-list-container { 
       background: #f0f0f0; 
-      padding: 15px; 
-      border-top: 3px solid #ccc; 
+      padding: 10px; 
+      border-top: 2px solid #ccc; 
       flex-shrink: 0;
-      height: 840px; /* locked at the size you like */
+      height: 420px;
     }
-    #customer-list { 
-      height: 100%; 
-      overflow-y: auto; 
-      background: white; 
-      border: 1px solid #ccc; 
-      border-radius: 8px; 
-    }
+    #customer-list { height: 100%; overflow-y: auto; background: white; border: 1px solid #ccc; border-radius: 8px; }
     #customer-list ul { list-style: none; padding: 0; margin: 0; }
     #customer-list li { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; }
     #customer-list li:hover { background: #f0f0f0; }
@@ -181,7 +145,7 @@
       </div>
     </div>
 
-    <!-- CUSTOMER LIST AT BOTTOM - TALL (840px) -->
+    <!-- CUSTOMER LIST AT BOTTOM - SMALLER -->
     <div id="customer-list-container">
       <h3>Customer List</h3>
       <div id="customer-list"><ul id="customer-list-ul"></ul></div>
@@ -235,22 +199,6 @@
       document.getElementById("map-screen").style.display = "flex";
       document.getElementById("pin-legend").style.display = "block";
       enableAllInputs();
-
-      setTimeout(() => {
-        const mapDiv = document.getElementById("map");
-        if (!map) {
-          map = new google.maps.Map(mapDiv, { zoom: 7, center: { lat: 35.7796, lng: -78.6382 } });
-        }
-        google.maps.event.trigger(map, 'resize');
-      }, 400);
-
-      setTimeout(() => {
-        if (map) google.maps.event.trigger(map, 'resize');
-      }, 900);
-
-      setTimeout(() => {
-        if (map) google.maps.event.trigger(map, 'resize');
-      }, 1500);
     }
 
     function showAuthScreen() {
@@ -339,10 +287,6 @@
       customersRef().onSnapshot(snapshot => {
         window.customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         initMap(getSelectedFilters());
-      }, (error) => {
-        console.error("Firestore error:", error);
-        window.customers = [];
-        initMap([]); // fallback - show empty map so you can see the map
       });
     }
 
@@ -549,7 +493,7 @@
 
     window.addEventListener('load', () => {
       const script = document.createElement('script');
-      script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyAk5eJEWBbPMOJjybLkJvQ9vJgvFw87030&callback=initMap&loading=async";
+      script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyAk5eJEWBbPMOJjybLkJvQ9vJgvFw87030&callback=initMap";
       script.async = true;
       script.defer = true;
       document.head.appendChild(script);
